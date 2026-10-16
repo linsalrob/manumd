@@ -1553,6 +1553,8 @@ async function syncGithubImages(conn, headers) {
     if (!current()) return;
     if (resp.status === 404) {
       await imageDbRequest('folders', 'readwrite', s => s.put([], imageFolderKey(conn)));
+      await pruneImageCache();
+      if (!current()) return;
       notify(`No ${conn.images}/ folder next to ${conn.path.split('/').pop()}, so no images were loaded`);
       return;
     }
