@@ -651,31 +651,44 @@ function splitRow(line) {
 
 // Removes HTML comments (<!-- ... -->), which are notes for authors and tools
 // and never appear in the output. Comments inside fenced code blocks and code
-// spans are kept. Line breaks inside a comment are preserved so preview blocks
-// still map to the same source lines; an unclosed comment runs to the end.
+// spans are kept; anything inside a comment (including a fenced block) is
+// removed. Line breaks inside a comment are preserved so preview blocks still
+// map to the same source lines; an unclosed comment runs to the end.
 function stripComments(md) {
-  const out = [];
-  let fence = null, chunk = [];
-  const flush = () => {
-    if (!chunk.length) return;
-    out.push(chunk.join('\n').replace(/(`+)[\s\S]*?\1|<!--[\s\S]*?(?:-->|$)/g, m => m.startsWith('`') ? m : m.replace(/[^\n]/g, '')));
-    chunk = [];
-  };
-  for (const line of md.replace(/\r/g, '').split('\n')) {
-    const f = line.match(/^\s*(```+|~~~+)/);
-    if (fence) {
-      out.push(line);
-      if (f && line.trim().startsWith(fence)) fence = null;
-    } else if (f) {
-      flush();
-      fence = f[1];
-      out.push(line);
-    } else {
-      chunk.push(line);
+  const text = md.replace(/\r/g, '');
+  let out = '';
+  let fence = null;
+  let i = 0;
+  while (i < text.length) {
+    const atLineStart = i === 0 || text[i - 1] === '\n';
+    if (atLineStart && (fence || /^[ \t]*(```+|~~~+)/.test(text.slice(i, i + 200)))) {
+      // Copy fence lines verbatim; track the opening and closing fence.
+      const end = text.indexOf('\n', i);
+      const line = end < 0 ? text.slice(i) : text.slice(i, end + 1);
+      if (fence) { if (line.trim().startsWith(fence)) fence = null; }
+      else fence = line.match(/^[ \t]*(```+|~~~+)/)[1];
+      out += line;
+      i += line.length;
+      continue;
     }
+    if (text.startsWith('<!--', i)) {
+      const close = text.indexOf('-->', i + 4);
+      const stop = close < 0 ? text.length : close + 3;
+      out += text.slice(i, stop).replace(/[^\n]/g, '');
+      i = stop;
+      continue;
+    }
+    if (text[i] === '`') {
+      const run = text.slice(i).match(/^`+/)[0];
+      const close = text.slice(i + run.length).search(new RegExp(`(?<!\`)${run}(?!\`)`));
+      const stop = close < 0 ? i + run.length : i + run.length + close + run.length;
+      out += text.slice(i, stop);
+      i = stop;
+      continue;
+    }
+    out += text[i++];
   }
-  flush();
-  return out.join('\n');
+  return out;
 }
 
 // Top-level blocks carry data-line (their first source line) so the preview
@@ -806,20 +819,28 @@ function loadKatex() {
   if (window.katex) return Promise.resolve(window.katex);
   if (katexLoading) return katexLoading;
   if (Date.now() < katexRetryAt) return Promise.reject(new Error('KaTeX unavailable'));
-  katexLoading = new Promise((resolve, reject) => {
-    const css = document.createElement('link');
-    Object.assign(css, { rel: 'stylesheet', href: KATEX.css.href, integrity: KATEX.css.integrity, crossOrigin: 'anonymous' });
-    const js = document.createElement('script');
-    Object.assign(js, { src: KATEX.js.src, integrity: KATEX.js.integrity, crossOrigin: 'anonymous' });
-    js.onload = () => window.katex ? resolve(window.katex) : reject(new Error('KaTeX did not initialise'));
-    js.onerror = () => { css.remove(); js.remove(); reject(new Error('KaTeX could not be loaded')); };
-    document.head.append(css, js);
+  // Both the script and the stylesheet must load: unstyled KaTeX output is
+  // less readable than the TeX source it would replace.
+  const css = document.createElement('link');
+  Object.assign(css, { rel: 'stylesheet', href: KATEX.css.href, integrity: KATEX.css.integrity, crossOrigin: 'anonymous' });
+  const js = document.createElement('script');
+  Object.assign(js, { src: KATEX.js.src, integrity: KATEX.js.integrity, crossOrigin: 'anonymous' });
+  const loaded = el => new Promise((resolve, reject) => {
+    el.onload = resolve;
+    el.onerror = () => reject(new Error('KaTeX could not be loaded'));
+  });
+  katexLoading = Promise.all([loaded(css), loaded(js)]).then(() => {
+    if (!window.katex) throw new Error('KaTeX did not initialise');
+    return window.katex;
   }).catch(err => {
+    css.remove();
+    js.remove();
     katexLoading = null;
     katexRetryAt = Date.now() + 60000;
     notify('Equations are shown as TeX source: the KaTeX renderer could not be loaded (are you offline?).');
     throw err;
   });
+  document.head.append(css, js);
   return katexLoading;
 }
 
