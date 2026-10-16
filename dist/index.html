@@ -609,6 +609,35 @@ function splitRow(line) {
   return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
 }
 
+// Removes HTML comments (<!-- ... -->), which are notes for authors and tools
+// and never appear in the output. Comments inside fenced code blocks and code
+// spans are kept. Line breaks inside a comment are preserved so preview blocks
+// still map to the same source lines; an unclosed comment runs to the end.
+function stripComments(md) {
+  const out = [];
+  let fence = null, chunk = [];
+  const flush = () => {
+    if (!chunk.length) return;
+    out.push(chunk.join('\n').replace(/(`+)[\s\S]*?\1|<!--[\s\S]*?(?:-->|$)/g, m => m.startsWith('`') ? m : m.replace(/[^\n]/g, '')));
+    chunk = [];
+  };
+  for (const line of md.replace(/\r/g, '').split('\n')) {
+    const f = line.match(/^\s*(```+|~~~+)/);
+    if (fence) {
+      out.push(line);
+      if (f && line.trim().startsWith(fence)) fence = null;
+    } else if (f) {
+      flush();
+      fence = f[1];
+      out.push(line);
+    } else {
+      chunk.push(line);
+    }
+  }
+  flush();
+  return out.join('\n');
+}
+
 function renderMarkdown(md, cited) {
   const lines = md.replace(/\r/g, '').split('\n');
   const inline = s => renderInline(s, cited);
@@ -708,7 +737,8 @@ function renderMarkdown(md, cited) {
 function updatePreview() {
   renderQueued = false;
   const cited = [];
-  let html = renderMarkdown(source.value, cited);
+  const text = stripComments(source.value);
+  let html = renderMarkdown(text, cited);
   const keys = [...new Set(cited)];
   const found = keys.filter(k => library.byKey.has(k));
   const missing = keys.filter(k => !library.byKey.has(k));
@@ -717,7 +747,7 @@ function updatePreview() {
   }
   preview.innerHTML = html;
 
-  const words = source.value.trim().split(/\s+/).filter(Boolean).length;
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
   $('wordCount').textContent = `${words} word${words === 1 ? '' : 's'}`;
   $('charCount').textContent = `${source.value.length} characters`;
   const citeStatus = $('citeStatus');
