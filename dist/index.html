@@ -658,10 +658,12 @@ function splitRow(line) {
 function stripComments(md) {
   const text = md.replace(/\r/g, '');
   let out = '';
-  let fence = null;
+  let fence = null, fenceQuoted = false;
   let i = 0;
   while (i < text.length) {
     const atLineStart = i === 0 || text[i - 1] === '\n';
+    // A fence opened inside a block quote ends when the quote does.
+    if (atLineStart && fence && fenceQuoted && !/^[ \t]*>/.test(text.slice(i, i + 200))) fence = null;
     // Fences may sit inside block quotes ("> ~~~").
     if (atLineStart && (fence || /^[ \t]*(?:>[ \t]?)*(```+|~~~+)/.test(text.slice(i, i + 200)))) {
       // Copy fence lines verbatim; track the opening and closing fence.
@@ -669,7 +671,7 @@ function stripComments(md) {
       const line = end < 0 ? text.slice(i) : text.slice(i, end + 1);
       const bare = line.replace(/^[ \t]*(?:>[ \t]?)*/, '');
       if (fence) { if (bare.trim().startsWith(fence)) fence = null; }
-      else fence = bare.match(/^(```+|~~~+)/)[1];
+      else { fence = bare.match(/^(```+|~~~+)/)[1]; fenceQuoted = /^[ \t]*>/.test(line); }
       out += line;
       i += line.length;
       continue;
