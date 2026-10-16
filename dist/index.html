@@ -774,8 +774,12 @@ function notify(msg) {
 // Modal dialogs: Escape closes, Tab stays inside, focus returns afterwards.
 // ---------------------------------------------------------------------------
 let modalReturnFocus = null;
+// While a GitHub request is in flight the dialog cannot be dismissed, so a
+// late response can never replace the draft or commit after an apparent cancel.
+let modalBusy = false;
 
-function closeModal() {
+function closeModal(force = false) {
+  if (modalBusy && force !== true) { notify('Waiting for GitHub…'); return; }
   $('modalRoot').innerHTML = '';
   if (modalReturnFocus && document.contains(modalReturnFocus)) modalReturnFocus.focus();
   modalReturnFocus = null;
@@ -786,7 +790,7 @@ function modal(title, content) {
   if (!root.innerHTML) modalReturnFocus = document.activeElement;
   root.innerHTML = `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h2 id="modalTitle">${esc(title)}</h2><button class="close" aria-label="Close">×</button></div>${content}</section></div>`;
   const m = root.querySelector('.modal');
-  root.querySelector('.close').onclick = closeModal;
+  root.querySelector('.close').onclick = () => closeModal();
   root.querySelector('.modal-backdrop').onclick = e => { if (e.target.classList.contains('modal-backdrop')) closeModal(); };
   m.addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeModal(); return; }
@@ -921,7 +925,7 @@ function githubDialog() {
     m.querySelector('#ghForget').classList.add('hidden');
     notify('Token removed from this tab');
   };
-  m.querySelector('#ghCancel').onclick = closeModal;
+  m.querySelector('#ghCancel').onclick = () => closeModal();
   m.querySelector('#ghLoad').onclick = () => githubFile(m, false);
   m.querySelector('#ghSave').onclick = () => githubFile(m, true);
   m.querySelector(github || githubToken ? '#ghToken' : '#ghRepo').focus();
@@ -962,6 +966,8 @@ async function githubFile(m, save) {
   const fileUrl = `https://api.github.com/repos/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
   const buttons = m.querySelectorAll('.modal-actions button');
   buttons.forEach(b => b.disabled = true);
+  m.querySelector('.close').disabled = true;
+  modalBusy = true;
 
   try {
     if (save) {
@@ -988,7 +994,7 @@ async function githubFile(m, save) {
       }
       if (!resp.ok) throw Error(data.message ? `GitHub rejected the commit: ${data.message}` : `GitHub rejected the commit (${resp.status}).`);
       github = { repo, branch, path, sha: data.content && data.content.sha };
-      closeModal();
+      closeModal(true);
       $('saveState').textContent = '· committed to GitHub';
       notify('Commit saved to GitHub');
     } else {
@@ -1010,7 +1016,7 @@ async function githubFile(m, save) {
       source.value = text;
       setDocName(path.split('/').pop());
       changed(true);
-      closeModal();
+      closeModal(true);
       $('saveState').textContent = '· loaded from GitHub';
       notify('Markdown loaded from GitHub');
     }
@@ -1018,7 +1024,10 @@ async function githubFile(m, save) {
   } catch (err) {
     notify(err.message || 'GitHub request failed');
   } finally {
+    modalBusy = false;
     buttons.forEach(b => b.disabled = false);
+    const close = m.querySelector('.close');
+    if (close) close.disabled = false;
   }
 }
 
