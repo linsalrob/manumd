@@ -658,23 +658,28 @@ function splitRow(line) {
 function stripComments(md) {
   const text = md.replace(/\r/g, '');
   let out = '';
-  let fence = null, fenceQuoted = false;
+  // Fences may sit inside block quotes ("> ~~~"); a fence belongs to the
+  // quote depth it was opened at and ends when that quote ends.
+  const quoteDepth = line => (line.match(/^[ \t]*((?:>[ \t]?)*)/)[1].match(/>/g) || []).length;
+  const unquote = line => line.replace(/^[ \t]*(?:>[ \t]?)*/, '');
+  let fence = null, fenceDepth = 0;
   let i = 0;
   while (i < text.length) {
-    const atLineStart = i === 0 || text[i - 1] === '\n';
-    // A fence opened inside a block quote ends when the quote does.
-    if (atLineStart && fence && fenceQuoted && !/^[ \t]*>/.test(text.slice(i, i + 200))) fence = null;
-    // Fences may sit inside block quotes ("> ~~~").
-    if (atLineStart && (fence || /^[ \t]*(?:>[ \t]?)*(```+|~~~+)/.test(text.slice(i, i + 200)))) {
-      // Copy fence lines verbatim; track the opening and closing fence.
+    if (i === 0 || text[i - 1] === '\n') {
       const end = text.indexOf('\n', i);
       const line = end < 0 ? text.slice(i) : text.slice(i, end + 1);
-      const bare = line.replace(/^[ \t]*(?:>[ \t]?)*/, '');
-      if (fence) { if ((fenceQuoted ? bare : line).trim().startsWith(fence)) fence = null; }
-      else { fence = bare.match(/^(```+|~~~+)/)[1]; fenceQuoted = /^[ \t]*>/.test(line); }
-      out += line;
-      i += line.length;
-      continue;
+      const depth = quoteDepth(line);
+      if (fence && depth < fenceDepth) fence = null;
+      const inner = fenceDepth ? unquote(line) : line;
+      const opens = !fence && /^[ \t]*(```+|~~~+)/.exec(unquote(line));
+      if (fence || opens) {
+        // Copy fence lines verbatim.
+        if (opens) { fence = opens[1]; fenceDepth = depth; }
+        else if (depth === fenceDepth && inner.trim().startsWith(fence)) fence = null;
+        out += line;
+        i += line.length;
+        continue;
+      }
     }
     if (text.startsWith('<!--', i)) {
       const close = text.indexOf('-->', i + 4);
@@ -685,7 +690,10 @@ function stripComments(md) {
     }
     if (text[i] === '`') {
       const run = text.slice(i).match(/^`+/)[0];
-      const close = text.slice(i + run.length).search(new RegExp(`(?<!\`)${run}(?!\`)`));
+      // A code span cannot cross a blank line (a block boundary).
+      const blank = text.slice(i).search(/\n[ \t]*\n/);
+      const scope = text.slice(i + run.length, blank < 0 ? text.length : i + blank);
+      const close = scope.search(new RegExp(`(?<!\`)${run}(?!\`)`));
       const stop = close < 0 ? i + run.length : i + run.length + close + run.length;
       out += text.slice(i, stop);
       i = stop;
