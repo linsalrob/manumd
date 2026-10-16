@@ -5,6 +5,7 @@ ManuMD is a local-first Markdown writing prototype for research manuscripts.
 ## Current prototype
 
 - Edit Markdown with a live preview (split, edit-only or preview-only view) and inline image display.
+- In split view, double-click either pane to bring the other into line at the same place, or turn on **⇅ Sync scroll** to keep them scrolled together.
 - Load a BibTeX file exported or synced from Paperpile, search it, and insert Pandoc-style citations. The preview formats citations and builds a reference list in order of first citation, and the status bar flags citation keys that are not in the loaded bibliography.
 - Open and download Markdown files.
 - Load a Markdown file from GitHub and save changes as a commit using a fine-grained token entered for that browser tab.
@@ -25,7 +26,13 @@ The preview uses a simple author–year style. It does not apply journal citatio
 
 ### Markdown preview
 
-The preview supports a common subset of Markdown: headings, paragraphs, bold, italic, strikethrough, inline code, fenced code blocks, links (web links open in a new tab, `#heading` links scroll the preview, and relative links open the file on GitHub when the draft was loaded from there), images, bulleted and numbered lists (not nested), block quotes, tables with a header row, horizontal rules, and YAML front matter (shown as text). Raw HTML in the Markdown is displayed as text, not rendered.
+The preview supports a common subset of Markdown: headings, paragraphs, bold, italic, strikethrough, inline code, fenced code blocks, links (web links open in a new tab, `#heading` links scroll the preview, and relative links open the file on GitHub when the draft was loaded from there), images, bulleted and numbered lists (not nested), block quotes, tables with a header row, horizontal rules, and YAML front matter (shown as text). HTML comments (`<!-- ... -->`) are hidden from the preview and the word count, except inside code. Other raw HTML in the Markdown is displayed as text, not rendered.
+
+### Equations
+
+LaTeX math uses Pandoc syntax: `$...$` for inline math and `$$...$$` for display math (on one line or spread over several). A dollar sign followed by a space or followed by a digit after the closing `$` is not treated as math, so prices such as "$100 and $1" are left alone; write `\$` for a literal dollar sign. Equations are typeset with [KaTeX](https://katex.org/), which supports most LaTeX math but not every package.
+
+KaTeX is the one external component. When a draft contains math, ManuMD fetches KaTeX 0.19.0 from the jsDelivr CDN, pinned to that version and checked with Subresource Integrity. Only the KaTeX files are requested: manuscript text is never sent. Offline, or if the CDN is unreachable, equations are shown as TeX source.
 
 ## Privacy and limitations
 

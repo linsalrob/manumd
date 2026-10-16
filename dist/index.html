@@ -26,7 +26,7 @@ a { color:#087eb5 }
 .button.dark { background:#274e61; border-color:#567486; color:white }
 .button.small { padding:6px 9px; font-size:12px }
 .button.icon { width:34px; height:32px; padding:0; display:grid; place-items:center; font-size:16px }
-.layout { height:calc(100vh - 58px); min-height:580px; display:grid; grid-template-columns:230px minmax(380px,1fr) 285px; gap:0 }
+.layout { height:calc(100vh - 58px); min-height:580px; display:grid; grid-template-columns:230px minmax(380px,1fr) 285px; grid-template-rows:minmax(0,1fr); gap:0 }
 .sidebar,.inspector { background:#f8fafc; padding:18px 14px; border-right:1px solid var(--line); overflow:auto }
 .inspector { border-right:0; border-left:1px solid var(--line); background:#f7f9fb }
 .side-heading { display:flex; justify-content:space-between; align-items:center; padding:0 7px; margin:0 0 8px; color:#5c7180; font-size:10px; letter-spacing:.13em; font-weight:800; text-transform:uppercase }
@@ -40,7 +40,7 @@ a { color:#087eb5 }
 .file-icon { width:15px; text-align:center; color:#77909e; font-size:12px }
 .separator { height:1px; background:var(--line); margin:17px 5px }
 .side-note { font-size:11px; color:#758795; padding:12px 8px; line-height:1.55 }
-.main { min-width:0; display:flex; flex-direction:column; background:var(--paper) }
+.main { min-height:0; min-width:0; display:flex; flex-direction:column; background:var(--paper) }
 .docbar { height:48px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 17px; gap:10px }
 .doc-title { display:flex; align-items:center; gap:8px; font-weight:700; font-size:13px; min-width:0 }
 .doc-title span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
@@ -51,7 +51,7 @@ a { color:#087eb5 }
 .toolbar { min-height:43px; border-bottom:1px solid #e8edf1; display:flex; align-items:center; gap:5px; padding:5px 15px }
 .toolbar .spacer { flex:1 }
 .toolbar-label { color:#8393a0; font-size:10px; margin:0 5px }
-.editor-split { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); flex:1; min-height:0 }
+.editor-split { grid-template-rows:minmax(0,1fr); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); flex:1; min-height:0 }
 .source-pane,.preview-pane { min-width:0; overflow:auto }
 .source-pane { border-right:1px solid var(--line); display:flex; flex-direction:column }
 .pane-label { height:31px; padding:7px 15px; border-bottom:1px solid #edf1f4; color:#7a8b98; font-size:10px; letter-spacing:.1em; font-weight:800; text-transform:uppercase; background:#fcfdfe }
@@ -121,6 +121,11 @@ a { color:#087eb5 }
 .file-list li.static { cursor:default }
 .file-list li.static:hover { background:transparent }
 .cite-missing { color:#b31b34 }
+.sync-toggle.on { background:#e4f4fa; border-color:var(--cyan); color:#075f87 }
+.layout:not(.view-split) .sync-toggle { display:none }
+.math:not(.typeset) { font:12px ui-monospace,monospace; color:#5c7180; background:#f6fafc; border-radius:4px; padding:1px 4px }
+.math.display { display:block; margin:16px 0; overflow-x:auto; overflow-y:hidden; text-align:center }
+.math.display:not(.typeset) { text-align:left; white-space:pre-wrap; padding:8px 12px }
 .relative-link { color:#087eb5; border-bottom:1px dotted #087eb5; cursor:help }
 .missing-image { display:block; margin:18px auto; padding:18px; border:1px dashed #cbd7df; border-radius:9px; color:#6f818e; font:12px/1.5 Inter,system-ui,sans-serif; text-align:center }
 .front-matter { font:12px/1.6 ui-monospace,monospace; color:#5c7180; background:#f6fafc; border:1px solid #e4ecf1; border-radius:8px; padding:10px 13px; white-space:pre-wrap; margin:0 0 18px }
@@ -144,6 +149,7 @@ a { color:#087eb5 }
   .toolbar { padding:5px 8px; overflow:auto }
   .source { padding:16px }
   .toolbar-label { display:none }
+  .sync-toggle { display:none }
   .status-left span:nth-child(n+2) { display:none }
 }
 </style>
@@ -194,6 +200,7 @@ a { color:#087eb5 }
       <button class="button icon" id="linkBtn" title="Insert link" aria-label="Insert link">↗</button>
       <span class="toolbar-label">MARKDOWN</span>
       <span class="spacer"></span>
+      <button class="button small sync-toggle" id="syncBtn" aria-pressed="false" title="Keep the source and preview scrolled together. Double-click either pane to align them once.">⇅ Sync scroll</button>
       <button class="button small" id="citeBtnTop" title="Insert citation (⌘/Ctrl + Shift + C)">＋ Citation</button>
     </div>
     <div class="editor-split">
@@ -245,6 +252,7 @@ a { color:#087eb5 }
         <li>⌘/Ctrl + I — italic</li>
         <li>⌘/Ctrl + S — download the Markdown file</li>
         <li>⌘/Ctrl + Shift + C — citation picker</li>
+        <li>Double-click source or preview — align the other pane</li>
         <li>Esc — close a dialog</li>
       </ul>
     </div>
@@ -265,7 +273,7 @@ const sampleSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="350
 // Browser storage. localStorage can be unavailable (private windows, blocked
 // site data) or full (large bibliographies), so every access is guarded.
 // ---------------------------------------------------------------------------
-const STORE = { draft: 'manumd-draft', bib: 'manumd-bib', bibName: 'manumd-bib-name', docName: 'manumd-doc-name' };
+const STORE = { draft: 'manumd-draft', bib: 'manumd-bib', bibName: 'manumd-bib-name', docName: 'manumd-doc-name', syncScroll: 'manumd-sync-scroll' };
 
 function load(key) {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -287,6 +295,7 @@ const $ = id => document.getElementById(id);
 const source = $('source');
 const preview = $('preview');
 const layout = $('layout');
+const previewPane = document.querySelector('.preview-pane');
 
 // Image previews are object URLs for this session only, keyed by file name.
 const images = { 'figure-1.svg': URL.createObjectURL(new Blob([sampleSvg], { type: 'image/svg+xml' })) };
@@ -555,45 +564,77 @@ function renderCitation(content, cited) {
 }
 
 function renderInline(text, cited) {
-  const tokens = [];
-  const hold = html => `\u0000${tokens.push(html) - 1}\u0000`;
+  const tokens = [], sources = [];
+  const hold = (html, src) => {
+    sources.push(src);
+    return `\u0000${tokens.push(html) - 1}\u0000`;
+  };
+  // Text destined for an attribute (URLs, alt text) gets held tokens back as
+  // their original Markdown source, never as HTML.
+  const plain = s => s.replace(/\u0000(\d+)\u0000/g, (_, n) => sources[n]);
   let t = text.replace(/\u0000/g, '');
 
+  // TeX math, Pandoc rules: $$display$$, and $inline$ where the opening $ is
+  // followed by a non-space, the closing $ preceded by a non-space and not
+  // followed by a digit (so "$100 and $1" is not math). \$ is a literal $.
+  const math = s => s
+    .replace(/(?<!\\)\$\$([\s\S]+?)\$\$/g, (m, tex) => hold(mathHtml(plain(tex), true), plain(m)))
+    .replace(/(?<![\\$])\$(?![\s$])((?:\\.|[^$\\])+?)(?<!\s)\$(?!\d)/g, (m, tex) => hold(mathHtml(plain(tex), false), plain(m)))
+    .replace(/\\\$/g, '$');
+
   // Code spans first so nothing inside them is interpreted.
-  t = t.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (_, __, code) => hold(`<code>${esc(code.trim())}</code>`));
+  t = t.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (m, __, code) => hold(`<code>${esc(code.trim())}</code>`, m));
 
   // Images: session images by path or file name, otherwise web URLs.
-  t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (_, alt, src) => {
+  t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (m, alt, src) => {
+    alt = plain(alt);
+    src = plain(src);
     let decoded = src;
     try { decoded = decodeURI(src); } catch { /* keep as written */ }
     const local = images[src] || images[decoded] || images[decoded.split('/').pop()];
-    if (local) return hold(`<img alt="${esc(alt)}" src="${esc(local)}">`);
-    if (isRelativePath(src)) return hold(`<span class="missing-image">Image not loaded: ${esc(decoded)}<br>Use “Add image files” to preview it in this session.</span>`);
+    if (local) return hold(`<img alt="${esc(alt)}" src="${esc(local)}">`, m);
+    if (isRelativePath(src)) return hold(`<span class="missing-image">Image not loaded: ${esc(decoded)}<br>Use “Add image files” to preview it in this session.</span>`, m);
     const url = safeUrl(src, ['http:', 'https:']);
-    return hold(url ? `<img alt="${esc(alt)}" src="${url}">` : esc(alt));
+    return hold(url ? `<img alt="${esc(alt)}" src="${url}">` : esc(alt), m);
   });
 
   // Links: web links open in a new tab, #fragments scroll the preview, and
   // relative paths open the file on GitHub when the draft came from there.
-  t = t.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (_, label, href) => {
-    const inner = renderEmphasis(esc(label));
-    if (href.startsWith('#')) return hold(`<a href="${esc(href)}" data-fragment="${esc(slug(href.slice(1)))}">${inner}</a>`);
+  // Destinations are parsed before math so "$" in a URL is never math.
+  t = t.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (m, label, href) => {
+    href = plain(href);
+    const inner = renderEmphasis(esc(math(label)));
+    if (href.startsWith('#')) return hold(`<a href="${esc(href)}" data-fragment="${esc(slug(href.slice(1)))}">${inner}</a>`, m);
     const url = safeUrl(href) || (isRelativePath(href) ? githubBlobUrl(href) : null);
-    if (url) return hold(`<a href="${url}" target="_blank" rel="noopener">${inner}</a>`);
-    return hold(`<span class="relative-link" title="${esc(isRelativePath(href) ? 'Relative link: ' + href : 'Link not shown: ' + href)}">${inner}</span>`);
+    if (url) return hold(`<a href="${url}" target="_blank" rel="noopener">${inner}</a>`, m);
+    return hold(`<span class="relative-link" title="${esc(isRelativePath(href) ? 'Relative link: ' + href : 'Link not shown: ' + href)}">${inner}</span>`, m);
   });
   t = t.replace(/<(https?:\/\/[^\s>]+)>/g, (whole, href) => {
+    href = plain(href);
     const url = safeUrl(href);
-    return url ? hold(`<a href="${url}" target="_blank" rel="noopener">${esc(href)}</a>`) : whole;
+    return url ? hold(`<a href="${url}" target="_blank" rel="noopener">${esc(href)}</a>`, whole) : whole;
   });
+
+  // Math before citations, so "[@x]" inside an equation stays TeX.
+  t = math(t);
 
   // Bracketed Pandoc citations: [@a], [@a; @b], [see @a, p. 4], [-@a].
   t = t.replace(/\[([^\[\]]*@[^\[\]]*)\]/g, (whole, content) => {
     const html = renderCitation(content, cited);
-    return html ? hold(html) : whole;
+    return html ? hold(html, whole) : whole;
   });
 
-  return renderEmphasis(esc(t)).replace(/\u0000(\d+)\u0000/g, (_, n) => tokens[n]);
+  // Tokens can nest (math or code inside a link label), so restore until none remain.
+  let html = renderEmphasis(esc(t));
+  for (let depth = 0; depth < 5 && html.includes('\u0000'); depth++) html = html.replace(/\u0000(\d+)\u0000/g, (_, n) => tokens[n]);
+  return html;
+}
+
+// Math is emitted as escaped TeX source and typeset later by KaTeX; if KaTeX
+// is unavailable the source stays visible.
+function mathHtml(tex, display) {
+  const delim = display ? '$$' : '$';
+  return `<span class="math${display ? ' display' : ''}" data-tex="${esc(tex.trim())}">${esc(delim + tex + delim)}</span>`;
 }
 
 function renderEmphasis(t) {
@@ -609,25 +650,82 @@ function splitRow(line) {
   return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
 }
 
-function renderMarkdown(md, cited) {
+// Removes HTML comments (<!-- ... -->), which are notes for authors and tools
+// and never appear in the output. Comments inside fenced code blocks and code
+// spans are kept; anything inside a comment (including a fenced block) is
+// removed. Line breaks inside a comment are preserved so preview blocks still
+// map to the same source lines; an unclosed comment runs to the end.
+function stripComments(md) {
+  const text = md.replace(/\r/g, '');
+  let out = '';
+  // Fences may sit inside block quotes ("> ~~~"); a fence belongs to the
+  // quote depth it was opened at and ends when that quote ends.
+  const quoteDepth = line => (line.match(/^[ \t]*((?:>[ \t]?)*)/)[1].match(/>/g) || []).length;
+  const unquote = line => line.replace(/^[ \t]*(?:>[ \t]?)*/, '');
+  let fence = null, fenceDepth = 0;
+  let i = 0;
+  while (i < text.length) {
+    if (i === 0 || text[i - 1] === '\n') {
+      const end = text.indexOf('\n', i);
+      const line = end < 0 ? text.slice(i) : text.slice(i, end + 1);
+      const depth = quoteDepth(line);
+      if (fence && depth < fenceDepth) fence = null;
+      const inner = fenceDepth ? unquote(line) : line;
+      const opens = !fence && /^[ \t]*(```+|~~~+)/.exec(unquote(line));
+      if (fence || opens) {
+        // Copy fence lines verbatim.
+        if (opens) { fence = opens[1]; fenceDepth = depth; }
+        else if (depth === fenceDepth && inner.trim().startsWith(fence)) fence = null;
+        out += line;
+        i += line.length;
+        continue;
+      }
+    }
+    if (text.startsWith('<!--', i)) {
+      const close = text.indexOf('-->', i + 4);
+      const stop = close < 0 ? text.length : close + 3;
+      out += text.slice(i, stop).replace(/[^\n]/g, '');
+      i = stop;
+      continue;
+    }
+    if (text[i] === '`') {
+      const run = text.slice(i).match(/^`+/)[0];
+      // A code span cannot cross a blank line (a block boundary).
+      const blank = text.slice(i).search(/\n[ \t]*\n/);
+      const scope = text.slice(i + run.length, blank < 0 ? text.length : i + blank);
+      const close = scope.search(new RegExp(`(?<!\`)${run}(?!\`)`));
+      const stop = close < 0 ? i + run.length : i + run.length + close + run.length;
+      out += text.slice(i, stop);
+      i = stop;
+      continue;
+    }
+    out += text[i++];
+  }
+  return out;
+}
+
+// Top-level blocks carry data-line (their first source line) so the preview
+// and the source can be scrolled into alignment.
+function renderMarkdown(md, cited, top = true) {
   const lines = md.replace(/\r/g, '').split('\n');
   const inline = s => renderInline(s, cited);
+  const at = n => top ? ` data-line="${n}"` : '';
   let html = '';
-  let para = [];
+  let para = [], paraLine = 0;
   let list = null; // 'ul' | 'ol'
-  let quote = [];
+  let quote = [], quoteLine = 0;
   let i = 0;
 
-  const flushPara = () => { if (para.length) { html += `<p>${inline(para.join(' '))}</p>`; para = []; } };
+  const flushPara = () => { if (para.length) { html += `<p${at(paraLine)}>${inline(para.join(' '))}</p>`; para = []; } };
   const endList = () => { if (list) { html += `</${list}>`; list = null; } };
-  const flushQuote = () => { if (quote.length) { html += `<blockquote>${renderMarkdown(quote.join('\n'), cited)}</blockquote>`; quote = []; } };
+  const flushQuote = () => { if (quote.length) { html += `<blockquote${at(quoteLine)}>${renderMarkdown(quote.join('\n'), cited, false)}</blockquote>`; quote = []; } };
   const flushAll = () => { flushPara(); endList(); flushQuote(); };
 
   // YAML front matter (Pandoc metadata) is shown as-is in a muted box.
   if (lines[0] === '---') {
     const end = lines.findIndex((l, n) => n > 0 && (l === '---' || l === '...'));
     if (end > 0) {
-      html += `<div class="front-matter">${esc(lines.slice(1, end).join('\n'))}</div>`;
+      html += `<div class="front-matter"${at(0)}>${esc(lines.slice(1, end).join('\n'))}</div>`;
       i = end + 1;
     }
   }
@@ -635,17 +733,36 @@ function renderMarkdown(md, cited) {
   for (; i < lines.length; i++) {
     const line = lines[i];
 
+    // Display math spanning several lines: $$ ... $$
+    // ($$...$$ closed on its own line is handled as inline display math.)
+    const opening = line.match(/^\s*\$\$/);
+    if (opening && !line.slice(opening[0].length).includes('$$')) {
+      const close = lines.findIndex((l, n) => n > i && l.includes('$$'));
+      if (close > 0) {
+        flushAll();
+        const closeAt = lines[close].indexOf('$$');
+        const body = [line.replace(/^\s*\$\$/, ''), ...lines.slice(i + 1, close), lines[close].slice(0, closeAt)].join('\n');
+        html += `<div class="math-block"${at(i)}>${mathHtml(body, true)}</div>`;
+        // Text after the closing $$ on the same line starts the next paragraph.
+        const rest = lines[close].slice(closeAt + 2).trim();
+        if (rest) { para = [rest]; paraLine = close; }
+        i = close;
+        continue;
+      }
+    }
+
     const fence = line.match(/^\s*(```+|~~~+)/);
     if (fence) {
       flushAll();
+      const start = i;
       const code = [];
       for (i++; i < lines.length && !lines[i].trim().startsWith(fence[1]); i++) code.push(lines[i]);
-      html += `<pre><code>${esc(code.join('\n'))}</code></pre>`;
+      html += `<pre${at(start)}><code>${esc(code.join('\n'))}</code></pre>`;
       continue;
     }
 
     const q = line.match(/^\s*>\s?(.*)$/);
-    if (q) { flushPara(); endList(); quote.push(q[1]); continue; }
+    if (q) { flushPara(); endList(); if (!quote.length) quoteLine = i; quote.push(q[1]); continue; }
     flushQuote();
 
     if (!line.trim()) { flushPara(); endList(); continue; }
@@ -658,11 +775,11 @@ function renderMarkdown(md, cited) {
       const text = attrs ? h[2].slice(0, attrs.index) : h[2];
       const explicit = attrs && attrs[1].match(/#([^\s}]+)/);
       const anchor = explicit ? explicit[1] : slug(text.replace(/[*_`]/g, ''));
-      html += `<h${level} data-anchor="${esc(slug(anchor))}">${inline(text)}</h${level}>`;
+      html += `<h${level}${at(i)} data-anchor="${esc(slug(anchor))}">${inline(text)}</h${level}>`;
       continue;
     }
 
-    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) { flushAll(); html += '<hr>'; continue; }
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) { flushAll(); html += `<hr${at(i)}>`; continue; }
 
     const li = line.match(/^\s*([-*+]|\d+[.)])\s+(.*)$/);
     if (li) {
@@ -670,22 +787,23 @@ function renderMarkdown(md, cited) {
       const kind = /\d/.test(li[1]) ? 'ol' : 'ul';
       if (list && list !== kind) endList();
       if (!list) { list = kind; html += `<${kind}>`; }
-      html += `<li>${inline(li[2])}</li>`;
+      html += `<li${at(i)}>${inline(li[2])}</li>`;
       continue;
     }
 
     // Tables: a header row followed by a |---|---| delimiter row.
     if (line.includes('|') && i + 1 < lines.length && lines[i + 1].includes('|') && /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/.test(lines[i + 1])) {
       flushAll();
+      const start = i;
       const header = splitRow(line);
       const align = splitRow(lines[i + 1]).map(c => c.endsWith(':') ? (c.startsWith(':') ? 'center' : 'right') : 'left');
       const cell = (tag, c, n) => `<${tag} style="text-align:${align[n] || 'left'}">${inline(c)}</${tag}>`;
       let table = `<thead><tr>${header.map((c, n) => cell('th', c, n)).join('')}</tr></thead><tbody>`;
       for (i += 2; i < lines.length && lines[i].includes('|') && lines[i].trim(); i++) {
-        table += `<tr>${splitRow(lines[i]).map((c, n) => cell('td', c, n)).join('')}</tr>`;
+        table += `<tr${at(i)}>${splitRow(lines[i]).map((c, n) => cell('td', c, n)).join('')}</tr>`;
       }
       i--;
-      html += `<div style="overflow:auto"><table>${table}</tbody></table></div>`;
+      html += `<div style="overflow:auto"${at(start)}><table>${table}</tbody></table></div>`;
       continue;
     }
 
@@ -696,10 +814,199 @@ function renderMarkdown(md, cited) {
       continue;
     }
     endList();
+    if (!para.length) paraLine = i;
     para.push(line.trim());
   }
   flushAll();
   return html;
+}
+
+// ---------------------------------------------------------------------------
+// Equations: KaTeX is fetched from a CDN only when the draft contains math,
+// pinned to one version and checked with Subresource Integrity. Only the
+// KaTeX files are requested; manuscript text never leaves the browser.
+// ---------------------------------------------------------------------------
+const KATEX = {
+  js: { src: 'https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js', integrity: 'sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk' },
+  css: { href: 'https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css', integrity: 'sha384-3rdsX6e5mueWyoweR9NIVmtEsUkokpBT/0ALqKKIBMr9j4qhHkaIkAcGgsE6uVlp' }
+};
+let katexLoading = null;
+let katexRetryAt = 0;
+const mathCache = new Map();
+
+function loadKatex() {
+  if (window.katex) return Promise.resolve(window.katex);
+  if (katexLoading) return katexLoading;
+  if (Date.now() < katexRetryAt) return Promise.reject(new Error('KaTeX unavailable'));
+  // Both the script and the stylesheet must load: unstyled KaTeX output is
+  // less readable than the TeX source it would replace.
+  const css = document.createElement('link');
+  Object.assign(css, { rel: 'stylesheet', href: KATEX.css.href, integrity: KATEX.css.integrity, crossOrigin: 'anonymous' });
+  const js = document.createElement('script');
+  Object.assign(js, { src: KATEX.js.src, integrity: KATEX.js.integrity, crossOrigin: 'anonymous' });
+  const loaded = el => new Promise((resolve, reject) => {
+    el.onload = resolve;
+    el.onerror = () => reject(new Error('KaTeX could not be loaded'));
+  });
+  katexLoading = Promise.all([loaded(css), loaded(js)]).then(() => {
+    if (!window.katex) throw new Error('KaTeX did not initialise');
+    return window.katex;
+  }).catch(err => {
+    css.remove();
+    js.remove();
+    katexLoading = null;
+    katexRetryAt = Date.now() + 60000;
+    notify('Equations are shown as TeX source: the KaTeX renderer could not be loaded (are you offline?).');
+    throw err;
+  });
+  document.head.append(css, js);
+  return katexLoading;
+}
+
+function typesetMath() {
+  if (!preview.querySelector('.math[data-tex]')) return;
+  loadKatex().then(katex => {
+    if (mathCache.size > 500) mathCache.clear();
+    for (const el of preview.querySelectorAll('.math[data-tex]')) {
+      const display = el.classList.contains('display');
+      const key = (display ? 'D:' : 'I:') + el.dataset.tex;
+      if (!mathCache.has(key)) {
+        // trust: false keeps \href, \url and \html* commands disabled.
+        mathCache.set(key, katex.renderToString(el.dataset.tex, { displayMode: display, throwOnError: false, trust: false, strict: 'ignore', maxExpand: 1000, output: 'htmlAndMathml' }));
+      }
+      el.innerHTML = mathCache.get(key);
+      el.removeAttribute('data-tex');
+      el.classList.add('typeset');
+    }
+    invalidateScrollMap();
+  }, () => {});
+}
+
+// ---------------------------------------------------------------------------
+// Scroll sync between the Markdown source and the preview (split view).
+// Preview blocks carry data-line; source line positions are measured with a
+// hidden copy of the textarea so wrapped lines are accounted for. Scroll
+// positions are mapped by linear interpolation between matching blocks.
+// ---------------------------------------------------------------------------
+let scrollMap = null;   // [{ src, prev }] sorted, both coordinates increasing
+let lineTops = null;    // y offset of each source line inside the textarea
+let syncScroll = load(STORE.syncScroll) === 'on';
+let syncLock = null, syncLockTimer = null;
+
+function invalidateScrollMap() { scrollMap = null; }
+function invalidateLineTops() { lineTops = null; scrollMap = null; }
+
+function splitVisible() {
+  return source.offsetParent !== null && previewPane.offsetParent !== null && source.clientHeight > 0;
+}
+
+function sourceLineTops() {
+  if (lineTops) return lineTops;
+  const cs = getComputedStyle(source);
+  const mirror = document.createElement('div');
+  for (const prop of ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'letterSpacing', 'wordSpacing', 'tabSize', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft']) mirror.style[prop] = cs[prop];
+  Object.assign(mirror.style, { position: 'absolute', visibility: 'hidden', top: '0', left: '-10000px', boxSizing: 'border-box', border: '0', width: source.clientWidth + 'px', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' });
+  for (const text of source.value.split('\n')) {
+    const row = document.createElement('div');
+    row.textContent = text || '\u200b';
+    mirror.append(row);
+  }
+  document.body.append(mirror);
+  lineTops = [...mirror.children].map(row => row.offsetTop);
+  mirror.remove();
+  return lineTops;
+}
+
+// Y offset of a preview element within the scrolling preview pane.
+function previewY(el) {
+  return el.getBoundingClientRect().top - previewPane.getBoundingClientRect().top + previewPane.scrollTop;
+}
+
+function buildScrollMap() {
+  if (scrollMap) return scrollMap;
+  const tops = sourceLineTops();
+  const points = [{ src: 0, prev: 0 }];
+  for (const el of preview.querySelectorAll('[data-line]')) {
+    const y = tops[+el.dataset.line];
+    if (y !== undefined) points.push({ src: y, prev: previewY(el) });
+  }
+  points.push({ src: Math.max(source.scrollHeight - source.clientHeight, 0), prev: Math.max(previewPane.scrollHeight - previewPane.clientHeight, 0) });
+  points.sort((a, b) => a.src - b.src);
+  // Keep both coordinates increasing so the mapping is monotonic.
+  scrollMap = [];
+  for (const pt of points) {
+    const last = scrollMap[scrollMap.length - 1];
+    if (!last || pt.prev >= last.prev) scrollMap.push(pt);
+  }
+  return scrollMap;
+}
+
+// Piecewise-linear map from one pane's scroll position to the other's.
+function mapScroll(map, from, to, value) {
+  if (!map.length) return 0;
+  if (value <= map[0][from]) return map[0][to];
+  for (let n = 1; n < map.length; n++) {
+    const a = map[n - 1], b = map[n];
+    if (value <= b[from]) {
+      const span = b[from] - a[from];
+      return span > 0 ? a[to] + (value - a[from]) / span * (b[to] - a[to]) : b[to];
+    }
+  }
+  return map[map.length - 1][to];
+}
+
+function scrollWithoutEcho(target, top) {
+  syncLock = target;
+  target.scrollTop = Math.max(0, top);
+  clearTimeout(syncLockTimer);
+  syncLockTimer = setTimeout(() => { syncLock = null; }, 80);
+}
+
+function onPaneScroll(from) {
+  const target = from === source ? previewPane : source;
+  if (syncLock === from) return; // this scroll was caused by syncing
+  if (!syncScroll || !splitVisible()) return;
+  const map = buildScrollMap();
+  scrollWithoutEcho(target, from === source ? mapScroll(map, 'src', 'prev', source.scrollTop) : mapScroll(map, 'prev', 'src', previewPane.scrollTop));
+}
+
+// Double-click a preview block: align the source on that block's line, at
+// the same height on screen, and put the cursor there.
+function alignSourceToPreview(el) {
+  const block = el.closest('[data-line]');
+  if (!block || !splitVisible()) return;
+  const line = +block.dataset.line;
+  const tops = sourceLineTops();
+  const offset = previewY(block) - previewPane.scrollTop;
+  scrollWithoutEcho(source, tops[line] - offset);
+  const pos = source.value.split('\n').slice(0, line).reduce((sum, l) => sum + l.length + 1, 0);
+  source.focus({ preventScroll: true });
+  source.setSelectionRange(pos, pos);
+}
+
+// Double-click in the source: bring the preview block for the cursor's line
+// to the same height as that line.
+function alignPreviewToSource() {
+  if (!splitVisible()) return;
+  const line = source.value.slice(0, source.selectionStart).split('\n').length - 1;
+  let block = null;
+  for (const el of preview.querySelectorAll('[data-line]')) {
+    if (+el.dataset.line <= line) block = el;
+    else break;
+  }
+  if (!block) return;
+  const tops = sourceLineTops();
+  const offset = tops[line] - source.scrollTop;
+  scrollWithoutEcho(previewPane, previewY(block) - offset);
+}
+
+function setSyncScroll(on) {
+  syncScroll = on;
+  store(STORE.syncScroll, on ? 'on' : 'off');
+  const btn = $('syncBtn');
+  btn.setAttribute('aria-pressed', on);
+  btn.classList.toggle('on', on);
+  if (on) onPaneScroll(source);
 }
 
 // ---------------------------------------------------------------------------
@@ -708,7 +1015,8 @@ function renderMarkdown(md, cited) {
 function updatePreview() {
   renderQueued = false;
   const cited = [];
-  let html = renderMarkdown(source.value, cited);
+  const text = stripComments(source.value);
+  let html = renderMarkdown(text, cited);
   const keys = [...new Set(cited)];
   const found = keys.filter(k => library.byKey.has(k));
   const missing = keys.filter(k => !library.byKey.has(k));
@@ -716,8 +1024,10 @@ function updatePreview() {
     html += `<section class="references"><h2>References</h2><ol>${found.map(k => `<li>${referenceHtml(library.byKey.get(k))}</li>`).join('')}</ol></section>`;
   }
   preview.innerHTML = html;
+  invalidateScrollMap();
+  typesetMath();
 
-  const words = source.value.trim().split(/\s+/).filter(Boolean).length;
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
   $('wordCount').textContent = `${words} word${words === 1 ? '' : 's'}`;
   $('charCount').textContent = `${source.value.length} characters`;
   const citeStatus = $('citeStatus');
@@ -783,6 +1093,7 @@ function saveDraft() {
 
 // Typing saves after a short pause; replacing the document saves at once.
 function changed(immediate = false) {
+  invalidateLineTops(); // covers typing, toolbar edits, insertions and file loads
   schedulePreview();
   if (immediate) { saveDraft(); return; }
   $('saveState').textContent = '· saving…';
@@ -1069,6 +1380,7 @@ async function githubFile(m, save) {
 function setView(view) {
   layout.classList.remove('view-split', 'view-edit', 'view-preview');
   layout.classList.add('view-' + view);
+  invalidateLineTops();
   document.querySelectorAll('.tabs button').forEach(b => {
     const on = b.dataset.view === view;
     b.classList.toggle('on', on);
@@ -1078,6 +1390,13 @@ function setView(view) {
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
 
 source.addEventListener('input', () => changed());
+source.addEventListener('scroll', () => onPaneScroll(source));
+previewPane.addEventListener('scroll', () => onPaneScroll(previewPane));
+source.addEventListener('dblclick', alignPreviewToSource);
+preview.addEventListener('dblclick', e => alignSourceToPreview(e.target));
+preview.addEventListener('load', invalidateScrollMap, true); // images change heights
+window.addEventListener('resize', invalidateLineTops);
+$('syncBtn').onclick = () => setSyncScroll(!syncScroll);
 preview.addEventListener('click', e => {
   const link = e.target.closest('a[data-fragment]');
   if (!link) return;
@@ -1184,6 +1503,7 @@ document.addEventListener('keydown', e => {
 source.value = load(STORE.draft) ?? sample;
 setBibliography(load(STORE.bib) ?? sampleBib);
 $('docName').textContent = docName;
+setSyncScroll(syncScroll);
 renderFileList();
 renderRefList();
 updatePreview();
