@@ -413,7 +413,7 @@ function parseBib(text) {
     if (!keyMatch) continue;
     const key = keyMatch[1];
     i += keyMatch[0].length;
-    const fields = {};
+    const fields = Object.create(null);
     while (keyMatch[2] === ',' && i < text.length) {
       while (i < text.length && /[\s,]/.test(text[i])) i++;
       if (text[i] === close || i >= text.length) { i++; break; }
@@ -450,7 +450,10 @@ function parseBib(text) {
     head.lastIndex = i;
     if (!key) continue;
     const entry = { type, key, authors: parseAuthors(fields.author || fields.editor || '') };
-    for (const [name, value] of Object.entries(fields)) entry[name] = name === 'url' || name === 'doi' ? value.trim() : cleanLatex(value);
+    for (const [name, value] of Object.entries(fields)) {
+      if (Object.hasOwn(entry, name)) continue; // a "key" or "type" field must not replace the entry's own
+      entry[name] = name === 'url' || name === 'doi' ? value.trim() : cleanLatex(value);
+    }
     entries.push(entry);
   }
   return entries;
