@@ -1356,7 +1356,7 @@ function setGithub(conn) {
 // that paper's images (the token, held separately, is kept).
 function detachFromGithub() {
   setGithub(null);
-  startImageSync();
+  imageSyncId++;
   setRepoImages([]);
 }
 
@@ -1366,9 +1366,10 @@ function restoreGithub() {
   try { conn = JSON.parse(load(STORE.github)); } catch { /* ignore */ }
   const str = v => typeof v === 'string';
   // Restore only alongside the exact draft and name it was saved with.
-  const draft = load(STORE.draft);
-  if (!conn || !str(conn.repo) || !str(conn.branch) || !str(conn.path) || draft === null ||
-      conn.draft !== draftFingerprint(draft, load(STORE.docName) || 'manuscript.md')) { unstore(STORE.github); return; }
+  // Compare with the draft and name already in the editor, not a fresh read:
+  // another tab may have saved since they were loaded.
+  if (!conn || !str(conn.repo) || !str(conn.branch) || !str(conn.path) ||
+      conn.draft !== draftFingerprint(source.value, docName)) { unstore(STORE.github); return; }
   setGithub({ repo: conn.repo, branch: conn.branch, path: conn.path, sha: str(conn.sha) ? conn.sha : null, images: str(conn.images) ? conn.images : DEFAULT_IMAGES_FOLDER });
   restoreRepoImages(github);
 }
@@ -1485,17 +1486,7 @@ async function githubFile(m, save) {
 // ---------------------------------------------------------------------------
 const IMAGE_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', avif: 'image/avif', bmp: 'image/bmp' };
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
-let imageSyncId = 0;
-// SHAs the latest sync is using. Pruning never deletes these, so a cancelled
-// sync cleaning up after itself cannot remove a blob a newer sync has just
-// cached but not yet listed.
-let activeImageShas = new Set();
-
-// Starting a sync (or restore) cancels any earlier one.
-function startImageSync() {
-  activeImageShas = new Set();
-  return ++imageSyncId;
-}
+let imageSyncId = 0; // starting a sync or restore cancels any earlier one
 let imageSync = Promise.resolve(); // the latest sync, for tests and callers
 
 let imageDb = null;
@@ -1534,6 +1525,47 @@ async function imageDbRequest(storeName, mode, makeRequest) {
   });
 }
 
+// Runs `body` in one transaction over both stores. IndexedDB runs read-write
+// transactions over the same stores one at a time, in every tab, so the
+// cache never shows a blob without its listing or a listing without its
+// blobs. `body` may return a function giving the result once the transaction
+// completes; resolves undefined if the transaction fails.
+async function imageDbTransaction(mode, body) {
+  const db = await openImageDb();
+  if (!db) return undefined;
+  return new Promise(resolve => {
+    let tx = null;
+    try {
+      tx = db.transaction(['blobs', 'folders'], mode);
+      tx.onerror = tx.onabort = () => resolve(undefined);
+      const result = body(tx.objectStore('blobs'), tx.objectStore('folders'));
+      tx.oncomplete = () => resolve(typeof result === 'function' ? result() : true);
+    } catch {
+      // Abort so requests already queued by `body` are not committed.
+      try { if (tx) tx.abort(); } catch { /* already finished */ }
+      resolve(undefined);
+    }
+  });
+}
+
+// Reads a folder's saved listing and the cached blobs for it (plus any other
+// SHAs asked for) in one transaction.
+function readImageCache(key, extraShas = []) {
+  return imageDbTransaction('readonly', (blobs, folders) => {
+    let listing = [];
+    const found = new Map();
+    const req = folders.get(key);
+    req.onsuccess = () => {
+      if (Array.isArray(req.result)) listing = req.result;
+      for (const sha of new Set([...listing.map(e => e.sha), ...extraShas])) {
+        const b = blobs.get(sha);
+        b.onsuccess = () => { if (b.result) found.set(sha, b.result); };
+      }
+    };
+    return () => ({ listing, found });
+  });
+}
+
 function imageFolderPath(conn) {
   if (!conn.images) return '';
   const dir = conn.path.split('/').slice(0, -1).join('/');
@@ -1562,25 +1594,20 @@ function setRepoImages(entries) {
 
 // Shows the cached images for a connection without using the network.
 async function restoreRepoImages(conn) {
-  const syncId = startImageSync();
+  const syncId = ++imageSyncId;
   if (!imageFolderPath(conn)) return;
-  const listing = await imageDbRequest('folders', 'readonly', s => s.get(imageFolderKey(conn)));
-  if (!Array.isArray(listing)) return;
-  const entries = [];
-  for (const { name, sha } of listing) {
-    const blob = await imageDbRequest('blobs', 'readonly', s => s.get(sha));
-    if (blob) entries.push({ name, blob });
-  }
-  if (syncId === imageSyncId && sameImageFolder(conn)) setRepoImages(entries);
+  const cache = await readImageCache(imageFolderKey(conn));
+  if (!cache || syncId !== imageSyncId || !sameImageFolder(conn)) return;
+  setRepoImages(cache.listing.filter(e => cache.found.has(e.sha)).map(e => ({ name: e.name, blob: cache.found.get(e.sha) })));
 }
 
 async function syncGithubImages(conn, headers) {
-  const syncId = startImageSync();
-  const using = activeImageShas;
+  const syncId = ++imageSyncId;
   const folder = imageFolderPath(conn);
   if (!folder) return;
+  const key = imageFolderKey(conn);
   const current = () => syncId === imageSyncId && sameImageFolder(conn);
-  let cached = false, listed = false, failed = false; // wrote a blob; wrote its listing; refresh failed
+  let failed = false;
   try {
     // The Git Trees API lists a folder by "branch:path" in one request, with
     // up to 100,000 entries (the Contents API stops at 1,000).
@@ -1588,7 +1615,7 @@ async function syncGithubImages(conn, headers) {
     const resp = await fetch(url, { headers });
     if (!current()) return;
     if (resp.status === 404) {
-      await imageDbRequest('folders', 'readwrite', s => s.put([], imageFolderKey(conn)));
+      await imageDbTransaction('readwrite', (blobs, folders) => { folders.put([], key); });
       await pruneImageCache();
       if (!current()) return;
       notify(`No ${conn.images}/ folder next to ${conn.path.split('/').pop()}, so no images were loaded`);
@@ -1603,52 +1630,50 @@ async function syncGithubImages(conn, headers) {
       .filter(f => f.type === 'blob' && f.mode !== '120000') // files, not symlinks
       .map(f => ({ name: f.path, sha: f.sha, size: f.size }))
       .filter(f => IMAGE_TYPES[f.name.split('.').pop().toLowerCase()]);
-    // The saved listing records only blobs that are in the cache. An image
-    // that cannot be downloaded or stored keeps its last cached version, so a
-    // partial refresh never prunes the previous copy.
-    const previous = await imageDbRequest('folders', 'readonly', s => s.get(imageFolderKey(conn)));
-    const previousSha = new Map((Array.isArray(previous) ? previous : []).map(e => [e.name, e.sha]));
-    const entries = [], listing = [], skipped = [], older = [];
+
+    // Nothing is written until the end, so a cancelled or failed sync leaves
+    // the cache as it was. An image that cannot be downloaded now keeps its
+    // last cached version.
+    const cache = await readImageCache(key, files.map(f => f.sha)) || { listing: [], found: new Map() };
+    const previousSha = new Map(cache.listing.map(e => [e.name, e.sha]));
+    const entries = [], skipped = [], older = [];
     let downloaded = 0;
     for (const f of files) {
       const name = `${conn.images}/${f.name}`;
-      const type = IMAGE_TYPES[f.name.split('.').pop().toLowerCase()];
-      using.add(f.sha);
-      let blob = await imageDbRequest('blobs', 'readonly', s => s.get(f.sha));
-      let stored = !!blob;
+      let sha = f.sha, blob = cache.found.get(f.sha);
       if (!blob && f.size <= MAX_IMAGE_BYTES) {
         const raw = await fetch(`https://api.github.com/repos/${conn.repo}/git/blobs/${encodeURIComponent(f.sha)}`, { headers: { ...headers, Accept: 'application/vnd.github.raw+json' } });
         if (!current()) return;
         if (raw.ok) {
-          blob = new Blob([await raw.arrayBuffer()], { type });
+          blob = new Blob([await raw.arrayBuffer()], { type: IMAGE_TYPES[f.name.split('.').pop().toLowerCase()] });
           downloaded++;
-          // A successful put resolves to the key; a failed one to undefined.
-          stored = await imageDbRequest('blobs', 'readwrite', s => s.put(blob, f.sha)) !== undefined;
-          if (stored) cached = true;
         }
       }
-      if (stored) {
-        listing.push({ name, sha: f.sha });
-      } else {
-        const oldSha = previousSha.get(name);
-        const old = oldSha && await imageDbRequest('blobs', 'readonly', s => s.get(oldSha));
-        if (old) {
-          using.add(oldSha);
-          listing.push({ name, sha: oldSha });
-          if (!blob) { blob = old; older.push(f.name); }
-        }
+      if (!blob && cache.found.has(previousSha.get(name))) {
+        sha = previousSha.get(name);
+        blob = cache.found.get(sha);
+        older.push(f.name);
       }
-      if (blob) entries.push({ name, blob });
+      if (blob) entries.push({ name, sha, blob });
       else skipped.push(f.name);
     }
     if (!current()) return;
-    listed = await imageDbRequest('folders', 'readwrite', s => s.put(listing, imageFolderKey(conn))) !== undefined;
-    await pruneImageCache();
+
+    // Store the new blobs and the listing together: all or nothing.
+    const saved = await imageDbTransaction('readwrite', (blobs, folders) => {
+      for (const e of entries) {
+        const has = blobs.count(e.sha);
+        has.onsuccess = () => { if (!has.result) blobs.put(e.blob, e.sha); };
+      }
+      folders.put(entries.map(({ name, sha }) => ({ name, sha })), key);
+    });
+    if (saved) await pruneImageCache();
     if (!current()) return;
     setRepoImages(entries);
     let msg = `${entries.length} image${entries.length === 1 ? '' : 's'} from ${conn.images}/ (${downloaded} downloaded, ${entries.length - downloaded} cached)`;
     if (older.length) msg += `. Showing the last cached version of: ${older.join(', ')}`;
     if (skipped.length) msg += `. Not loaded: ${skipped.join(', ')}`;
+    if (!saved) msg += '. They could not be saved in this browser, so they will not be available offline';
     notify(msg);
   } catch (err) {
     if (current()) {
@@ -1657,25 +1682,21 @@ async function syncGithubImages(conn, headers) {
       failed = true;
     }
   } finally {
-    // Cancelled or failed after caching blobs that no listing refers to. A
-    // newer sync's blobs stay protected; this sync's are released.
-    if (cached && !listed) {
-      using.clear();
-      await pruneImageCache();
-    }
     if (failed && current()) await restoreRepoImages(conn);
   }
 }
 
-// Removes cached images that no saved folder listing refers to any more.
-async function pruneImageCache() {
-  const listings = await imageDbRequest('folders', 'readonly', s => s.getAll());
-  const keys = await imageDbRequest('blobs', 'readonly', s => s.getAllKeys());
-  if (!Array.isArray(listings) || !Array.isArray(keys)) return;
-  const used = new Set(listings.flat().map(e => e.sha));
-  for (const key of keys) {
-    if (!used.has(key) && !activeImageShas.has(key)) await imageDbRequest('blobs', 'readwrite', s => s.delete(key));
-  }
+// Removes cached images that no saved folder listing refers to, in one
+// transaction, so it can never remove a blob whose listing is being written.
+function pruneImageCache() {
+  return imageDbTransaction('readwrite', (blobs, folders) => {
+    const listings = folders.getAll();
+    listings.onsuccess = () => {
+      const used = new Set(listings.result.flat().map(e => e.sha));
+      const keys = blobs.getAllKeys();
+      keys.onsuccess = () => { for (const k of keys.result) if (!used.has(k)) blobs.delete(k); };
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
