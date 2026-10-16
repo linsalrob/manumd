@@ -725,8 +725,12 @@ function renderMarkdown(md, cited, top = true) {
       const close = lines.findIndex((l, n) => n > i && l.includes('$$'));
       if (close > 0) {
         flushAll();
-        const body = [line.replace(/^\s*\$\$/, ''), ...lines.slice(i + 1, close), lines[close].replace(/\$\$[\s\S]*$/, '')].join('\n');
+        const closeAt = lines[close].indexOf('$$');
+        const body = [line.replace(/^\s*\$\$/, ''), ...lines.slice(i + 1, close), lines[close].slice(0, closeAt)].join('\n');
         html += `<div class="math-block"${at(i)}>${mathHtml(body, true)}</div>`;
+        // Text after the closing $$ on the same line starts the next paragraph.
+        const rest = lines[close].slice(closeAt + 2).trim();
+        if (rest) { para = [rest]; paraLine = close; }
         i = close;
         continue;
       }
