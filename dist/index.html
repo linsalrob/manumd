@@ -317,9 +317,12 @@ const previewPane = document.querySelector('.preview-pane');
 
 // Image previews are object URLs keyed by path. `images` holds files added
 // in this session; `repoImages` holds images from the GitHub images folder,
-// which are also cached in IndexedDB (see "GitHub images" below).
-const images = { 'figure-1.svg': URL.createObjectURL(new Blob([sampleSvg], { type: 'image/svg+xml' })) };
+// which are also cached in IndexedDB (see "GitHub images" below);
+// `sampleImages` holds the sample manuscript's figure, used only when no
+// other image matches.
+const images = {};
 let repoImages = {};
+const sampleImages = { 'figure-1.svg': URL.createObjectURL(new Blob([sampleSvg], { type: 'image/svg+xml' })) };
 
 // GitHub connection. `github` describes the file the current draft came from
 // (or was last committed to) and changes only when a load or save succeeds.
@@ -359,11 +362,12 @@ function slug(text) {
 }
 
 // Finds a previewable image for a Markdown image path: by path, then by file
-// name. Images added in this session take precedence over GitHub images.
+// name. Images added in this session take precedence over GitHub images,
+// and the sample figure comes last.
 function imageUrl(src, decoded) {
   const path = decoded.replace(/^\.\//, '');
   const name = path.split('/').pop();
-  for (const set of [images, repoImages]) {
+  for (const set of [images, repoImages, sampleImages]) {
     const hit = set[src] || set[decoded] || set[path];
     if (hit) return hit;
     const key = Object.keys(set).find(k => k.split('/').pop() === name);
@@ -1111,7 +1115,7 @@ function renderFileList() {
     }
   };
   group('images (from GitHub)', Object.keys(repoImages));
-  group('images (this session)', Object.keys(images));
+  group('images (this session)', [...Object.keys(images), ...Object.keys(sampleImages).filter(k => !images[k])]);
   $('fileList').innerHTML = items.join('');
 }
 
