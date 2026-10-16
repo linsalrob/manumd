@@ -716,19 +716,26 @@ function renderFileList() {
 function setDocName(name) {
   docName = name || 'manuscript.md';
   $('docName').textContent = docName;
-  store(STORE.docName, docName);
   renderFileList();
 }
 
-function changed() {
+// The draft and its file name are stored together, name only after the text,
+// so a reload or a full browser storage never pairs one file's name with
+// another file's contents.
+function saveDraft() {
+  clearTimeout(saveTimer);
+  const ok = store(STORE.draft, source.value) && store(STORE.docName, docName);
+  setStorageStatus(ok);
+  $('saveState').textContent = ok ? '· saved locally' : '· not saved locally';
+}
+
+// Typing saves after a short pause; replacing the document saves at once.
+function changed(immediate = false) {
   schedulePreview();
+  if (immediate) { saveDraft(); return; }
   $('saveState').textContent = '· saving…';
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    const ok = store(STORE.draft, source.value);
-    setStorageStatus(ok);
-    $('saveState').textContent = ok ? '· saved locally' : '· not saved locally';
-  }, 450);
+  saveTimer = setTimeout(saveDraft, 450);
 }
 
 // Opening or starting a file replaces the only local copy of the draft.
@@ -975,7 +982,7 @@ async function githubFile(m, save) {
       github.sha = d.sha;
       source.value = text;
       setDocName(path.split('/').pop());
-      changed();
+      changed(true);
       closeModal();
       $('saveState').textContent = '· loaded from GitHub';
       notify('Markdown loaded from GitHub');
@@ -1002,7 +1009,7 @@ function setView(view) {
 }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
 
-source.addEventListener('input', changed);
+source.addEventListener('input', () => changed());
 
 $('citeBtn').onclick = citationPicker;
 $('citeBtnTop').onclick = citationPicker;
@@ -1023,7 +1030,7 @@ $('mdFile').onchange = e => {
     source.value = t;
     github = github && { ...github, sha: null, path: '' };
     setDocName(f.name);
-    changed();
+    changed(true);
     $('saveState').textContent = '· opened from device';
   });
 };
@@ -1059,7 +1066,7 @@ $('addFileBtn').onclick = () => {
   source.value = '';
   github = github && { ...github, sha: null, path: '' };
   setDocName(name.trim());
-  changed();
+  changed(true);
   notify('New draft started');
 };
 
