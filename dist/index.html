@@ -379,10 +379,14 @@ function parseAuthors(raw) {
     if (braced(p)) return { last: cleanLatex(p), full: cleanLatex(p) };
     if (p.toLowerCase() === 'others') return { last: 'others', full: 'et al.' };
     const name = cleanLatex(p);
-    let last, first;
-    if (name.includes(',')) [last, first = ''] = name.split(',').map(x => x.trim());
+    // BibTeX name forms: "First Last", "Last, First" and "Last, Jr, First".
+    let last, first = '', suffix = '';
+    const parts = name.split(',').map(x => x.trim());
+    if (parts.length >= 3) [last, suffix, first] = parts;
+    else if (parts.length === 2) [last, first] = parts;
     else { const words = name.split(' '); last = words.pop(); first = words.join(' '); }
-    return { last, full: first ? `${last}, ${initials(first)}` : last };
+    const full = [last, first && initials(first), suffix].filter(Boolean).join(', ');
+    return { last, full };
   });
 }
 
