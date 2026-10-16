@@ -441,14 +441,14 @@ function parseBib(text) {
 }
 
 function setBibliography(text) {
-  const entries = parseBib(text);
+  // Keep the first entry for each key; later duplicates are ignored everywhere.
   const byKey = new Map();
   let duplicates = 0;
-  for (const e of entries) {
+  for (const e of parseBib(text)) {
     if (byKey.has(e.key)) duplicates++;
     else byKey.set(e.key, e);
   }
-  library = { entries, byKey, duplicates };
+  library = { entries: [...byKey.values()], byKey, duplicates };
 }
 
 function authorShort(entry) {
@@ -485,13 +485,20 @@ function referenceHtml(r) {
 // citations. Inline HTML in the Markdown is shown as text, never rendered.
 // ---------------------------------------------------------------------------
 
-function renderCitation(content, cited) {
+// Parses the inside of [...] as Pandoc citation items, or returns null if it
+// is not a citation (e.g. "[email me@x]").
+function parseCitationItems(content) {
   const items = content.split(';').map(item => {
     const m = item.match(/^(.*?)(-?)@([\w:.#$%&+?<>~/-]*\w)(.*)$/s);
     if (!m || (m[1] && !/[\s(]$/.test(m[1]))) return null;
     return { prefix: m[1].trim(), suppress: m[2] === '-', key: m[3], locator: m[4].replace(/^\s*,/, '').trim() };
   });
-  if (items.some(x => !x)) return null; // not a citation, e.g. "[email me@x]"
+  return items.some(x => !x) ? null : items;
+}
+
+function renderCitation(content, cited) {
+  const items = parseCitationItems(content);
+  if (!items) return null;
   const html = items.map(({ prefix, suppress, key, locator }) => {
     cited.push(key);
     const r = library.byKey.get(key);
@@ -815,8 +822,8 @@ function citationPicker() {
 // Inserts [@key], or merges into a citation group that ends at the cursor.
 function insertCitation(key) {
   const a = source.selectionStart, b = source.selectionEnd;
-  const before = source.value.slice(0, a);
-  if (a === b && /\[[^\[\]]*@[^\[\]]*\]$/.test(before)) {
+  const group = source.value.slice(0, a).match(/\[([^\[\]]*)\]$/);
+  if (a === b && group && parseCitationItems(group[1])) {
     source.setRangeText(`; @${key}]`, a - 1, a, 'end');
     changed();
     source.focus();
