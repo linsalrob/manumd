@@ -121,6 +121,9 @@ a { color:#087eb5 }
 .file-list li.static { cursor:default }
 .file-list li.static:hover { background:transparent }
 .cite-missing { color:#b31b34 }
+.math:not(.typeset) { font:12px ui-monospace,monospace; color:#5c7180; background:#f6fafc; border-radius:4px; padding:1px 4px }
+.math.display { display:block; margin:16px 0; overflow-x:auto; overflow-y:hidden; text-align:center }
+.math.display:not(.typeset) { text-align:left; white-space:pre-wrap; padding:8px 12px }
 .relative-link { color:#087eb5; border-bottom:1px dotted #087eb5; cursor:help }
 .missing-image { display:block; margin:18px auto; padding:18px; border:1px dashed #cbd7df; border-radius:9px; color:#6f818e; font:12px/1.5 Inter,system-ui,sans-serif; text-align:center }
 .front-matter { font:12px/1.6 ui-monospace,monospace; color:#5c7180; background:#f6fafc; border:1px solid #e4ecf1; border-radius:8px; padding:10px 13px; white-space:pre-wrap; margin:0 0 18px }
@@ -562,6 +565,13 @@ function renderInline(text, cited) {
   // Code spans first so nothing inside them is interpreted.
   t = t.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (_, __, code) => hold(`<code>${esc(code.trim())}</code>`));
 
+  // TeX math, Pandoc rules: $$display$$, and $inline$ where the opening $ is
+  // followed by a non-space, the closing $ preceded by a non-space and not
+  // followed by a digit (so "$100 and $1" is not math). \$ is a literal $.
+  t = t.replace(/(?<!\\)\$\$([\s\S]+?)\$\$/g, (_, tex) => hold(mathHtml(tex, true)));
+  t = t.replace(/(?<![\\$])\$(?![\s$])((?:\\.|[^$\\])+?)(?<!\s)\$(?!\d)/g, (_, tex) => hold(mathHtml(tex, false)));
+  t = t.replace(/\\\$/g, '$');
+
   // Images: session images by path or file name, otherwise web URLs.
   t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (_, alt, src) => {
     let decoded = src;
@@ -594,6 +604,13 @@ function renderInline(text, cited) {
   });
 
   return renderEmphasis(esc(t)).replace(/\u0000(\d+)\u0000/g, (_, n) => tokens[n]);
+}
+
+// Math is emitted as escaped TeX source and typeset later by KaTeX; if KaTeX
+// is unavailable the source stays visible.
+function mathHtml(tex, display) {
+  const delim = display ? '$$' : '$';
+  return `<span class="math${display ? ' display' : ''}" data-tex="${esc(tex.trim())}">${esc(delim + tex + delim)}</span>`;
 }
 
 function renderEmphasis(t) {
@@ -664,6 +681,18 @@ function renderMarkdown(md, cited) {
   for (; i < lines.length; i++) {
     const line = lines[i];
 
+    // Display math spanning several lines: $$ ... $$
+    if (/^\s*\$\$/.test(line) && !/^\s*\$\$[\s\S]*\$\$\s*$/.test(line)) {
+      const close = lines.findIndex((l, n) => n > i && l.includes('$$'));
+      if (close > 0) {
+        flushAll();
+        const body = [line.replace(/^\s*\$\$/, ''), ...lines.slice(i + 1, close), lines[close].replace(/\$\$[\s\S]*$/, '')].join('\n');
+        html += `<div class="math-block">${mathHtml(body, true)}</div>`;
+        i = close;
+        continue;
+      }
+    }
+
     const fence = line.match(/^\s*(```+|~~~+)/);
     if (fence) {
       flushAll();
@@ -732,6 +761,58 @@ function renderMarkdown(md, cited) {
 }
 
 // ---------------------------------------------------------------------------
+// Equations: KaTeX is fetched from a CDN only when the draft contains math,
+// pinned to one version and checked with Subresource Integrity. Only the
+// KaTeX files are requested; manuscript text never leaves the browser.
+// ---------------------------------------------------------------------------
+const KATEX = {
+  js: { src: 'https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js', integrity: 'sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk' },
+  css: { href: 'https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css', integrity: 'sha384-3rdsX6e5mueWyoweR9NIVmtEsUkokpBT/0ALqKKIBMr9j4qhHkaIkAcGgsE6uVlp' }
+};
+let katexLoading = null;
+let katexRetryAt = 0;
+const mathCache = new Map();
+
+function loadKatex() {
+  if (window.katex) return Promise.resolve(window.katex);
+  if (katexLoading) return katexLoading;
+  if (Date.now() < katexRetryAt) return Promise.reject(new Error('KaTeX unavailable'));
+  katexLoading = new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    Object.assign(css, { rel: 'stylesheet', href: KATEX.css.href, integrity: KATEX.css.integrity, crossOrigin: 'anonymous' });
+    const js = document.createElement('script');
+    Object.assign(js, { src: KATEX.js.src, integrity: KATEX.js.integrity, crossOrigin: 'anonymous' });
+    js.onload = () => window.katex ? resolve(window.katex) : reject(new Error('KaTeX did not initialise'));
+    js.onerror = () => { css.remove(); js.remove(); reject(new Error('KaTeX could not be loaded')); };
+    document.head.append(css, js);
+  }).catch(err => {
+    katexLoading = null;
+    katexRetryAt = Date.now() + 60000;
+    notify('Equations are shown as TeX source: the KaTeX renderer could not be loaded (are you offline?).');
+    throw err;
+  });
+  return katexLoading;
+}
+
+function typesetMath() {
+  if (!preview.querySelector('.math[data-tex]')) return;
+  loadKatex().then(katex => {
+    if (mathCache.size > 500) mathCache.clear();
+    for (const el of preview.querySelectorAll('.math[data-tex]')) {
+      const display = el.classList.contains('display');
+      const key = (display ? 'D:' : 'I:') + el.dataset.tex;
+      if (!mathCache.has(key)) {
+        // trust: false keeps \href, \url and \html* commands disabled.
+        mathCache.set(key, katex.renderToString(el.dataset.tex, { displayMode: display, throwOnError: false, trust: false, strict: 'ignore', maxExpand: 1000, output: 'htmlAndMathml' }));
+      }
+      el.innerHTML = mathCache.get(key);
+      el.removeAttribute('data-tex');
+      el.classList.add('typeset');
+    }
+  }, () => {});
+}
+
+// ---------------------------------------------------------------------------
 // Preview, status bar, reference panel and file list
 // ---------------------------------------------------------------------------
 function updatePreview() {
@@ -746,6 +827,7 @@ function updatePreview() {
     html += `<section class="references"><h2>References</h2><ol>${found.map(k => `<li>${referenceHtml(library.byKey.get(k))}</li>`).join('')}</ol></section>`;
   }
   preview.innerHTML = html;
+  typesetMath();
 
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   $('wordCount').textContent = `${words} word${words === 1 ? '' : 's'}`;
