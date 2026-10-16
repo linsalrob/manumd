@@ -1579,30 +1579,51 @@ async function syncGithubImages(conn, headers) {
       .filter(f => f.type === 'blob' && f.mode !== '120000') // files, not symlinks
       .map(f => ({ name: f.path, sha: f.sha, size: f.size }))
       .filter(f => IMAGE_TYPES[f.name.split('.').pop().toLowerCase()]);
-    const entries = [], skipped = [];
+    // The saved listing records only blobs that are in the cache. An image
+    // that cannot be downloaded or stored keeps its last cached version, so a
+    // partial refresh never prunes the previous copy.
+    const previous = await imageDbRequest('folders', 'readonly', s => s.get(imageFolderKey(conn)));
+    const previousSha = new Map((Array.isArray(previous) ? previous : []).map(e => [e.name, e.sha]));
+    const entries = [], listing = [], skipped = [], older = [];
     let downloaded = 0;
     for (const f of files) {
+      const name = `${conn.images}/${f.name}`;
       const type = IMAGE_TYPES[f.name.split('.').pop().toLowerCase()];
       using.add(f.sha);
       let blob = await imageDbRequest('blobs', 'readonly', s => s.get(f.sha));
-      if (!blob) {
-        if (f.size > MAX_IMAGE_BYTES) { skipped.push(f.name); continue; }
+      let stored = !!blob;
+      if (!blob && f.size <= MAX_IMAGE_BYTES) {
         const raw = await fetch(`https://api.github.com/repos/${conn.repo}/git/blobs/${encodeURIComponent(f.sha)}`, { headers: { ...headers, Accept: 'application/vnd.github.raw+json' } });
         if (!current()) return;
-        if (!raw.ok) { skipped.push(f.name); continue; }
-        blob = new Blob([await raw.arrayBuffer()], { type });
-        // A successful put resolves to the key; a failed one to undefined.
-        if (await imageDbRequest('blobs', 'readwrite', s => s.put(blob, f.sha)) !== undefined) cached = true;
-        downloaded++;
+        if (raw.ok) {
+          blob = new Blob([await raw.arrayBuffer()], { type });
+          downloaded++;
+          // A successful put resolves to the key; a failed one to undefined.
+          stored = await imageDbRequest('blobs', 'readwrite', s => s.put(blob, f.sha)) !== undefined;
+          if (stored) cached = true;
+        }
       }
-      entries.push({ name: `${conn.images}/${f.name}`, sha: f.sha, blob });
+      if (stored) {
+        listing.push({ name, sha: f.sha });
+      } else {
+        const oldSha = previousSha.get(name);
+        const old = oldSha && await imageDbRequest('blobs', 'readonly', s => s.get(oldSha));
+        if (old) {
+          using.add(oldSha);
+          listing.push({ name, sha: oldSha });
+          if (!blob) { blob = old; older.push(f.name); }
+        }
+      }
+      if (blob) entries.push({ name, blob });
+      else skipped.push(f.name);
     }
     if (!current()) return;
-    listed = await imageDbRequest('folders', 'readwrite', s => s.put(entries.map(({ name, sha }) => ({ name, sha })), imageFolderKey(conn))) !== undefined;
+    listed = await imageDbRequest('folders', 'readwrite', s => s.put(listing, imageFolderKey(conn))) !== undefined;
     await pruneImageCache();
     if (!current()) return;
     setRepoImages(entries);
     let msg = `${entries.length} image${entries.length === 1 ? '' : 's'} from ${conn.images}/ (${downloaded} downloaded, ${entries.length - downloaded} cached)`;
+    if (older.length) msg += `. Showing the last cached version of: ${older.join(', ')}`;
     if (skipped.length) msg += `. Not loaded: ${skipped.join(', ')}`;
     notify(msg);
   } catch (err) {
