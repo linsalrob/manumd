@@ -302,6 +302,7 @@ let bibName = load(STORE.bibName) || 'references.bib';
 let docName = load(STORE.docName) || 'manuscript.md';
 let saveTimer = null;
 let renderQueued = false;
+let mdReadId = 0, bibReadId = 0; // latest local file reads
 
 // ---------------------------------------------------------------------------
 // HTML helpers. All user-authored text is escaped before it reaches innerHTML.
@@ -1093,7 +1094,9 @@ $('bibBtn2').onclick = () => $('bibFile').click();
 $('bibFile').onchange = e => {
   const f = e.target.files[0];
   e.target.value = '';
-  if (f) f.text().then(t => loadBibText(t, f.name));
+  if (!f) return;
+  const readId = ++bibReadId;
+  f.text().then(t => { if (readId === bibReadId) loadBibText(t, f.name); });
 };
 
 $('openBtn').onclick = () => $('mdFile').click();
@@ -1101,7 +1104,13 @@ $('mdFile').onchange = e => {
   const f = e.target.files[0];
   e.target.value = '';
   if (!f || !confirmReplaceDraft()) return;
+  // Only the most recent read may replace the draft, and only if the draft
+  // was not edited while the file was being read.
+  const readId = ++mdReadId;
+  const before = source.value;
   f.text().then(t => {
+    if (readId !== mdReadId) return;
+    if (source.value !== before) { notify(`${f.name} was not opened because the draft changed while it loaded. Open it again to replace the draft.`); return; }
     source.value = t;
     detachFromGithub();
     setDocName(f.name);
