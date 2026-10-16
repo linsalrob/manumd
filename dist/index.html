@@ -609,7 +609,10 @@ function renderInline(text, cited) {
     return html ? hold(html) : whole;
   });
 
-  return renderEmphasis(esc(t)).replace(/\u0000(\d+)\u0000/g, (_, n) => tokens[n]);
+  // Tokens can nest (math or code inside a link label), so restore until none remain.
+  let html = renderEmphasis(esc(t));
+  for (let depth = 0; depth < 5 && html.includes('\u0000'); depth++) html = html.replace(/\u0000(\d+)\u0000/g, (_, n) => tokens[n]);
+  return html;
 }
 
 // Math is emitted as escaped TeX source and typeset later by KaTeX; if KaTeX
