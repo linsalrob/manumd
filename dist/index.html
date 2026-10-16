@@ -1123,12 +1123,16 @@ function setDocName(name) {
   renderFileList();
 }
 
-// The draft and its file name are stored together, name only after the text,
-// so a reload or a full browser storage never pairs one file's name with
-// another file's contents.
+// The draft, its file name and its GitHub connection are stored together,
+// name and connection only after the text, so a reload or a full browser
+// storage never pairs one file's name or GitHub SHA with another file's
+// contents. If the draft cannot be stored, the stored connection is removed,
+// so a later save asks before overwriting rather than trusting a stale SHA.
 function saveDraft() {
   clearTimeout(saveTimer);
-  const ok = store(STORE.draft, source.value) && store(STORE.docName, docName);
+  const ok = store(STORE.draft, source.value) && store(STORE.docName, docName) &&
+    (github ? store(STORE.github, JSON.stringify(github)) : (unstore(STORE.github), true));
+  if (!ok) unstore(STORE.github);
   setStorageStatus(ok);
   $('saveState').textContent = ok ? '· saved locally' : '· not saved locally';
 }
@@ -1322,12 +1326,10 @@ function githubDialog() {
 
 const DEFAULT_IMAGES_FOLDER = 'images';
 
-// Records the GitHub file the draft belongs to, in memory and with the draft
-// in localStorage (the token is not part of it).
+// Records the GitHub file the draft belongs to. saveDraft() stores it with
+// the draft (the token is not part of it).
 function setGithub(conn) {
   github = conn;
-  if (conn) store(STORE.github, JSON.stringify(conn));
-  else unstore(STORE.github);
   $('sourcePill').textContent = conn ? `GitHub: ${conn.repo}` : 'Local draft';
 }
 
@@ -1406,7 +1408,15 @@ async function githubFile(m, save) {
         throw Error('The file changed on GitHub since you loaded it. Download your draft, then load the file again and reapply your edits.');
       }
       if (!resp.ok) throw Error(data.message ? `GitHub rejected the commit: ${data.message}` : `GitHub rejected the commit (${resp.status}).`);
+      const previous = github;
       setGithub({ repo, branch, path, sha: data.content && data.content.sha, images: imagesFolder });
+      saveDraft();
+      // Saved to another repository, branch or images folder: show that
+      // location's images rather than the previous one's.
+      if (!previous || imageFolderKey(previous) !== imageFolderKey(github)) {
+        setRepoImages([]);
+        imageSync = syncGithubImages(github, headers);
+      }
       closeModal(true);
       $('saveState').textContent = '· committed to GitHub';
       notify('Commit saved to GitHub');
