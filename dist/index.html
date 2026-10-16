@@ -920,6 +920,14 @@ function githubDialog() {
   m.querySelector(github || githubToken ? '#ghToken' : '#ghRepo').focus();
 }
 
+// The draft no longer comes from a GitHub file. Repository and branch stay as
+// dialog defaults (saving to an unloaded path asks before replacing a file),
+// but the path and SHA are cleared and the source indicator is reset.
+function detachFromGithub() {
+  if (github) github = { ...github, sha: null, path: '' };
+  $('sourcePill').textContent = 'Local draft';
+}
+
 function decodeBase64Utf8(b64) {
   const raw = atob(b64.replace(/\s/g, ''));
   return new TextDecoder().decode(Uint8Array.from(raw, c => c.charCodeAt(0)));
@@ -1040,7 +1048,7 @@ $('mdFile').onchange = e => {
   if (!f || !confirmReplaceDraft()) return;
   f.text().then(t => {
     source.value = t;
-    github = github && { ...github, sha: null, path: '' };
+    detachFromGithub();
     setDocName(f.name);
     changed(true);
     $('saveState').textContent = '· opened from device';
@@ -1076,7 +1084,7 @@ $('addFileBtn').onclick = () => {
   const name = prompt('New Markdown file name', 'section.md');
   if (!name) return;
   source.value = '';
-  github = github && { ...github, sha: null, path: '' };
+  detachFromGithub();
   setDocName(name.trim());
   changed(true);
   notify('New draft started');
