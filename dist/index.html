@@ -1337,7 +1337,7 @@ function setGithub(conn) {
 // that paper's images (the token, held separately, is kept).
 function detachFromGithub() {
   setGithub(null);
-  imageSyncId++;
+  startImageSync();
   setRepoImages([]);
 }
 
@@ -1464,6 +1464,16 @@ async function githubFile(m, save) {
 const IMAGE_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', avif: 'image/avif', bmp: 'image/bmp' };
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 let imageSyncId = 0;
+// SHAs the latest sync is using. Pruning never deletes these, so a cancelled
+// sync cleaning up after itself cannot remove a blob a newer sync has just
+// cached but not yet listed.
+let activeImageShas = new Set();
+
+// Starting a sync (or restore) cancels any earlier one.
+function startImageSync() {
+  activeImageShas = new Set();
+  return ++imageSyncId;
+}
 let imageSync = Promise.resolve(); // the latest sync, for tests and callers
 
 let imageDb = null;
@@ -1530,7 +1540,7 @@ function setRepoImages(entries) {
 
 // Shows the cached images for a connection without using the network.
 async function restoreRepoImages(conn) {
-  const syncId = ++imageSyncId;
+  const syncId = startImageSync();
   if (!imageFolderPath(conn)) return;
   const listing = await imageDbRequest('folders', 'readonly', s => s.get(imageFolderKey(conn)));
   if (!Array.isArray(listing)) return;
@@ -1543,10 +1553,12 @@ async function restoreRepoImages(conn) {
 }
 
 async function syncGithubImages(conn, headers) {
-  const syncId = ++imageSyncId;
+  const syncId = startImageSync();
+  const using = activeImageShas;
   const folder = imageFolderPath(conn);
   if (!folder) return;
   const current = () => syncId === imageSyncId && sameImageFolder(conn);
+  let cached = false, listed = false; // wrote a blob; wrote its folder listing
   try {
     const url = `https://api.github.com/repos/${conn.repo}/contents/${folder.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(conn.branch)}`;
     const resp = await fetch(url, { headers });
@@ -1566,6 +1578,7 @@ async function syncGithubImages(conn, headers) {
     let downloaded = 0;
     for (const f of files) {
       const type = IMAGE_TYPES[f.name.split('.').pop().toLowerCase()];
+      using.add(f.sha);
       let blob = await imageDbRequest('blobs', 'readonly', s => s.get(f.sha));
       if (!blob) {
         if (f.size > MAX_IMAGE_BYTES) { skipped.push(f.name); continue; }
@@ -1574,12 +1587,14 @@ async function syncGithubImages(conn, headers) {
         if (!raw.ok) { skipped.push(f.name); continue; }
         blob = new Blob([await raw.arrayBuffer()], { type });
         await imageDbRequest('blobs', 'readwrite', s => s.put(blob, f.sha));
+        cached = true;
         downloaded++;
       }
       entries.push({ name: `${conn.images}/${f.name}`, sha: f.sha, blob });
     }
     if (!current()) return;
     await imageDbRequest('folders', 'readwrite', s => s.put(entries.map(({ name, sha }) => ({ name, sha })), imageFolderKey(conn)));
+    listed = true;
     await pruneImageCache();
     if (!current()) return;
     setRepoImages(entries);
@@ -1588,6 +1603,13 @@ async function syncGithubImages(conn, headers) {
     notify(msg);
   } catch (err) {
     if (current()) notify(`Images were not loaded: ${err.message || 'GitHub request failed'}`);
+  } finally {
+    // Cancelled or failed after caching blobs that no listing refers to. A
+    // newer sync's blobs stay protected; this sync's are released.
+    if (cached && !listed) {
+      using.clear();
+      await pruneImageCache();
+    }
   }
 }
 
@@ -1598,7 +1620,7 @@ async function pruneImageCache() {
   if (!Array.isArray(listings) || !Array.isArray(keys)) return;
   const used = new Set(listings.flat().map(e => e.sha));
   for (const key of keys) {
-    if (!used.has(key)) await imageDbRequest('blobs', 'readwrite', s => s.delete(key));
+    if (!used.has(key) && !activeImageShas.has(key)) await imageDbRequest('blobs', 'readwrite', s => s.delete(key));
   }
 }
 
