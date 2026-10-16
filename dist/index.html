@@ -564,50 +564,64 @@ function renderCitation(content, cited) {
 }
 
 function renderInline(text, cited) {
-  const tokens = [];
-  const hold = html => `\u0000${tokens.push(html) - 1}\u0000`;
+  const tokens = [], sources = [];
+  const hold = (html, src) => {
+    sources.push(src);
+    return `\u0000${tokens.push(html) - 1}\u0000`;
+  };
+  // Text destined for an attribute (URLs, alt text) gets held tokens back as
+  // their original Markdown source, never as HTML.
+  const plain = s => s.replace(/\u0000(\d+)\u0000/g, (_, n) => sources[n]);
   let t = text.replace(/\u0000/g, '');
-
-  // Code spans first so nothing inside them is interpreted.
-  t = t.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (_, __, code) => hold(`<code>${esc(code.trim())}</code>`));
 
   // TeX math, Pandoc rules: $$display$$, and $inline$ where the opening $ is
   // followed by a non-space, the closing $ preceded by a non-space and not
   // followed by a digit (so "$100 and $1" is not math). \$ is a literal $.
-  t = t.replace(/(?<!\\)\$\$([\s\S]+?)\$\$/g, (_, tex) => hold(mathHtml(tex, true)));
-  t = t.replace(/(?<![\\$])\$(?![\s$])((?:\\.|[^$\\])+?)(?<!\s)\$(?!\d)/g, (_, tex) => hold(mathHtml(tex, false)));
-  t = t.replace(/\\\$/g, '$');
+  const math = s => s
+    .replace(/(?<!\\)\$\$([\s\S]+?)\$\$/g, (m, tex) => hold(mathHtml(tex, true), m))
+    .replace(/(?<![\\$])\$(?![\s$])((?:\\.|[^$\\])+?)(?<!\s)\$(?!\d)/g, (m, tex) => hold(mathHtml(tex, false), m))
+    .replace(/\\\$/g, '$');
+
+  // Code spans first so nothing inside them is interpreted.
+  t = t.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (m, __, code) => hold(`<code>${esc(code.trim())}</code>`, m));
 
   // Images: session images by path or file name, otherwise web URLs.
-  t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (_, alt, src) => {
+  t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (m, alt, src) => {
+    alt = plain(alt);
+    src = plain(src);
     let decoded = src;
     try { decoded = decodeURI(src); } catch { /* keep as written */ }
     const local = images[src] || images[decoded] || images[decoded.split('/').pop()];
-    if (local) return hold(`<img alt="${esc(alt)}" src="${esc(local)}">`);
-    if (isRelativePath(src)) return hold(`<span class="missing-image">Image not loaded: ${esc(decoded)}<br>Use “Add image files” to preview it in this session.</span>`);
+    if (local) return hold(`<img alt="${esc(alt)}" src="${esc(local)}">`, m);
+    if (isRelativePath(src)) return hold(`<span class="missing-image">Image not loaded: ${esc(decoded)}<br>Use “Add image files” to preview it in this session.</span>`, m);
     const url = safeUrl(src, ['http:', 'https:']);
-    return hold(url ? `<img alt="${esc(alt)}" src="${url}">` : esc(alt));
+    return hold(url ? `<img alt="${esc(alt)}" src="${url}">` : esc(alt), m);
   });
 
   // Links: web links open in a new tab, #fragments scroll the preview, and
   // relative paths open the file on GitHub when the draft came from there.
-  t = t.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (_, label, href) => {
-    const inner = renderEmphasis(esc(label));
-    if (href.startsWith('#')) return hold(`<a href="${esc(href)}" data-fragment="${esc(slug(href.slice(1)))}">${inner}</a>`);
+  // Destinations are parsed before math so "$" in a URL is never math.
+  t = t.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (m, label, href) => {
+    href = plain(href);
+    const inner = renderEmphasis(esc(math(label)));
+    if (href.startsWith('#')) return hold(`<a href="${esc(href)}" data-fragment="${esc(slug(href.slice(1)))}">${inner}</a>`, m);
     const url = safeUrl(href) || (isRelativePath(href) ? githubBlobUrl(href) : null);
-    if (url) return hold(`<a href="${url}" target="_blank" rel="noopener">${inner}</a>`);
-    return hold(`<span class="relative-link" title="${esc(isRelativePath(href) ? 'Relative link: ' + href : 'Link not shown: ' + href)}">${inner}</span>`);
+    if (url) return hold(`<a href="${url}" target="_blank" rel="noopener">${inner}</a>`, m);
+    return hold(`<span class="relative-link" title="${esc(isRelativePath(href) ? 'Relative link: ' + href : 'Link not shown: ' + href)}">${inner}</span>`, m);
   });
   t = t.replace(/<(https?:\/\/[^\s>]+)>/g, (whole, href) => {
+    href = plain(href);
     const url = safeUrl(href);
-    return url ? hold(`<a href="${url}" target="_blank" rel="noopener">${esc(href)}</a>`) : whole;
+    return url ? hold(`<a href="${url}" target="_blank" rel="noopener">${esc(href)}</a>`, whole) : whole;
   });
 
   // Bracketed Pandoc citations: [@a], [@a; @b], [see @a, p. 4], [-@a].
   t = t.replace(/\[([^\[\]]*@[^\[\]]*)\]/g, (whole, content) => {
     const html = renderCitation(content, cited);
-    return html ? hold(html) : whole;
+    return html ? hold(html, whole) : whole;
   });
+
+  t = math(t);
 
   // Tokens can nest (math or code inside a link label), so restore until none remain.
   let html = renderEmphasis(esc(t));
@@ -1039,6 +1053,7 @@ function saveDraft() {
 
 // Typing saves after a short pause; replacing the document saves at once.
 function changed(immediate = false) {
+  invalidateLineTops(); // covers typing, toolbar edits, insertions and file loads
   schedulePreview();
   if (immediate) { saveDraft(); return; }
   $('saveState').textContent = '· saving…';
@@ -1334,7 +1349,7 @@ function setView(view) {
 }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
 
-source.addEventListener('input', () => { invalidateLineTops(); changed(); });
+source.addEventListener('input', () => changed());
 source.addEventListener('scroll', () => onPaneScroll(source));
 previewPane.addEventListener('scroll', () => onPaneScroll(previewPane));
 source.addEventListener('dblclick', alignPreviewToSource);
