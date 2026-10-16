@@ -662,12 +662,14 @@ function stripComments(md) {
   let i = 0;
   while (i < text.length) {
     const atLineStart = i === 0 || text[i - 1] === '\n';
-    if (atLineStart && (fence || /^[ \t]*(```+|~~~+)/.test(text.slice(i, i + 200)))) {
+    // Fences may sit inside block quotes ("> ~~~").
+    if (atLineStart && (fence || /^[ \t]*(?:>[ \t]?)*(```+|~~~+)/.test(text.slice(i, i + 200)))) {
       // Copy fence lines verbatim; track the opening and closing fence.
       const end = text.indexOf('\n', i);
       const line = end < 0 ? text.slice(i) : text.slice(i, end + 1);
-      if (fence) { if (line.trim().startsWith(fence)) fence = null; }
-      else fence = line.match(/^[ \t]*(```+|~~~+)/)[1];
+      const bare = line.replace(/^[ \t]*(?:>[ \t]?)*/, '');
+      if (fence) { if (bare.trim().startsWith(fence)) fence = null; }
+      else fence = bare.match(/^(```+|~~~+)/)[1];
       out += line;
       i += line.length;
       continue;
@@ -722,7 +724,9 @@ function renderMarkdown(md, cited, top = true) {
     const line = lines[i];
 
     // Display math spanning several lines: $$ ... $$
-    if (/^\s*\$\$/.test(line) && !/^\s*\$\$[\s\S]*\$\$\s*$/.test(line)) {
+    // ($$...$$ closed on its own line is handled as inline display math.)
+    const opening = line.match(/^\s*\$\$/);
+    if (opening && !line.slice(opening[0].length).includes('$$')) {
       const close = lines.findIndex((l, n) => n > i && l.includes('$$'));
       if (close > 0) {
         flushAll();
