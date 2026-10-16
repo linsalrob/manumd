@@ -4,39 +4,1189 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#173e51"><title>ManuMD — research writing, in Markdown</title>
 <style>
-:root{--navy:#173e51;--ink:#172433;--muted:#657789;--paper:#fff;--wash:#edf2f6;--line:#d8e1e8;--cyan:#03a9f4;--mint:#8ed7c4;--gold:#ffbf47;--soft:#f7fafc;--shadow:0 12px 36px #173e5110}*{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}a{color:#087eb5}.topbar{height:58px;background:var(--navy);color:white;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px #102e3d20}.brand{display:flex;align-items:center;gap:11px}.logo{width:31px;height:31px;border-radius:9px;background:var(--cyan);color:white;font-weight:900;display:grid;place-items:center;font-size:16px;box-shadow:inset 0 -3px 0 #006b9b}.brand h1{font-size:15px;letter-spacing:.08em;margin:0;font-weight:800}.brand small{display:block;color:#c4d5df;font-size:11px;letter-spacing:0;font-weight:500;margin-top:-2px}.top-actions{display:flex;align-items:center;gap:9px}.pill{font-size:11px;color:#d6e4ea;border:1px solid #6f8996;border-radius:20px;padding:5px 9px;display:flex;gap:6px;align-items:center}.dot{width:7px;height:7px;border-radius:50%;background:var(--mint)}.button{border:1px solid var(--line);background:white;color:var(--ink);border-radius:8px;padding:8px 11px;font-weight:650;transition:.15s}.button:hover{border-color:#8ca4b4;background:#fbfdff}.button.primary{background:var(--cyan);color:white;border-color:var(--cyan)}.button.primary:hover{background:#008ccc}.button.dark{background:#274e61;border-color:#567486;color:white}.button.small{padding:6px 9px;font-size:12px}.button.icon{width:34px;height:32px;padding:0;display:grid;place-items:center;font-size:16px}.layout{height:calc(100vh - 58px);min-height:580px;display:grid;grid-template-columns:230px minmax(380px,1fr) 285px;gap:0}.sidebar,.inspector{background:#f8fafc;padding:18px 14px;border-right:1px solid var(--line);overflow:auto}.inspector{border-right:0;border-left:1px solid var(--line);background:#f7f9fb}.side-heading{display:flex;justify-content:space-between;align-items:center;padding:0 7px;margin:0 0 8px;color:#5c7180;font-size:10px;letter-spacing:.13em;font-weight:800;text-transform:uppercase}.side-heading button{border:0;background:transparent;color:#708493;font-size:17px}.workspace-name{display:flex;gap:9px;align-items:center;font-size:13px;font-weight:750;padding:10px 8px 14px}.folder-icon{color:#b58a36}.file-list{list-style:none;padding:0;margin:0}.file-list li{padding:7px 8px;border-radius:7px;display:flex;align-items:center;gap:8px;color:#435968;cursor:pointer;font-size:12px}.file-list li:hover{background:#eaf1f5}.file-list li.active{background:#dff3fb;color:#075f87;font-weight:700}.file-icon{width:15px;text-align:center;color:#77909e;font-size:12px}.separator{height:1px;background:var(--line);margin:17px 5px}.side-note{font-size:11px;color:#758795;padding:12px 8px;line-height:1.55}.main{min-width:0;display:flex;flex-direction:column;background:var(--paper)}.docbar{height:48px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 17px;gap:10px}.doc-title{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;min-width:0}.doc-title span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.save-state{color:#718391;font-size:11px;font-weight:500}.tabs{display:flex;gap:2px;background:#eef3f6;border-radius:8px;padding:3px}.tabs button{border:0;background:transparent;color:#607483;font-size:11px;font-weight:700;padding:5px 9px;border-radius:6px}.tabs button.on{background:white;color:var(--navy);box-shadow:0 1px 3px #173e511a}.toolbar{min-height:43px;border-bottom:1px solid #e8edf1;display:flex;align-items:center;gap:5px;padding:5px 15px}.toolbar .spacer{flex:1}.toolbar-label{color:#8393a0;font-size:10px;margin:0 5px}.editor-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);flex:1;min-height:0}.source-pane,.preview-pane{min-width:0;overflow:auto}.source-pane{border-right:1px solid var(--line);display:flex;flex-direction:column}.pane-label{height:31px;padding:7px 15px;border-bottom:1px solid #edf1f4;color:#7a8b98;font-size:10px;letter-spacing:.1em;font-weight:800;text-transform:uppercase;background:#fcfdfe}.source{resize:none;flex:1;width:100%;border:0;outline:none!important;padding:22px 24px 40px;background:white;color:#263c4b;font:13px/1.85 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;tab-size:2;white-space:pre-wrap}.source:focus{outline:none}.preview{max-width:760px;margin:0 auto;padding:28px 32px 54px;color:#263746;font:15px/1.75 Georgia,"Times New Roman",serif}.preview h1,.preview h2,.preview h3{font-family:Inter,system-ui,sans-serif;color:#183d50;line-height:1.25}.preview h1{font-size:27px;border-bottom:1px solid #dce6ec;padding-bottom:11px;margin-top:4px}.preview h2{font-size:20px;margin-top:30px}.preview h3{font-size:16px;margin-top:24px}.preview p{margin:12px 0}.preview blockquote{border-left:3px solid var(--cyan);margin:16px 0;padding:6px 14px;color:#647987;background:#f6fafc}.preview pre{background:#f0f4f6;padding:13px;border-radius:8px;overflow:auto}.preview code{font:12px ui-monospace,monospace;background:#f0f4f6;padding:2px 4px;border-radius:4px}.preview pre code{padding:0;background:transparent}.preview img{max-width:100%;border-radius:9px;border:1px solid #d8e1e8;display:block;margin:18px auto;box-shadow:0 8px 22px #173e5115}.figure-caption{font:11px/1.5 Inter,system-ui,sans-serif;color:#6f818e;text-align:center;margin-top:-12px}.preview table{border-collapse:collapse;width:100%;font:12px Inter,system-ui,sans-serif}.preview td,.preview th{border:1px solid var(--line);padding:7px 9px;text-align:left}.preview th{background:#f2f6f8}.references{border-top:1px solid var(--line);margin-top:35px;padding-top:18px}.references h2{font-size:17px}.references ol{padding-left:22px;font-size:12px;line-height:1.6}.empty-preview{color:#788b98;font:13px Inter,system-ui,sans-serif;text-align:center;padding:25vh 20px}.statusbar{height:32px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 14px;color:#728492;font-size:10px}.status-left{display:flex;gap:15px}.status-green{color:#29866e}.panel-title{font-weight:800;color:#344e5e;font-size:12px;margin:0 0 11px}.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;box-shadow:0 2px 8px #173e5105}.card p{font-size:11px;color:#708391;margin:6px 0 0;line-height:1.55}.refs-empty{border:1px dashed #cbd7df;border-radius:9px;padding:17px 13px;text-align:center;color:#778b99;font-size:11px;line-height:1.5}.refs-empty strong{display:block;color:#435b6b;font-size:12px;margin-bottom:4px}.ref-count{display:inline-block;background:#e4f4fa;color:#0878a5;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:800}.ref-list{margin:10px 0 0;max-height:210px;overflow:auto}.ref-item{padding:8px 3px;border-bottom:1px solid #edf1f3}.ref-key{font:10px ui-monospace,monospace;color:#007cad}.ref-title{font-size:11px;color:#435967;line-height:1.35;margin-top:2px}.ref-meta{font-size:10px;color:#8796a0;margin-top:2px}.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.quick-grid .button{font-size:11px;padding:7px 8px;text-align:left}.guide-list{padding-left:16px;margin:0;color:#718391;font-size:11px;line-height:1.8}.privacy-note{padding:11px;background:#edf8f5;border-radius:8px;color:#3f7467;font-size:10px;line-height:1.5}.modal-backdrop{position:fixed;inset:0;background:#102e3db0;z-index:10;display:grid;place-items:center;padding:20px}.modal{background:white;border-radius:14px;width:min(540px,100%);padding:21px;box-shadow:0 24px 80px #102e3d50}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.modal-head h2{font-size:17px;margin:0;color:var(--navy)}.close{border:0;background:transparent;font-size:21px;color:#728492}.modal p{font-size:12px;color:#6e8190;line-height:1.6}.field{margin:12px 0}.field label{display:block;font-size:11px;font-weight:750;color:#4f6675;margin-bottom:5px}.field input{width:100%;border:1px solid #cbd7df;border-radius:7px;padding:9px 10px}.field small{display:block;color:#82929d;font-size:10px;margin-top:4px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.cite-search{width:100%;border:1px solid #ccd9e0;border-radius:8px;padding:10px;margin:6px 0 10px}.cite-results{max-height:340px;overflow:auto}.cite-result{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #edf1f3;background:white;padding:10px 4px}.cite-result:hover{background:#f4fafc}.cite-result strong{display:block;color:#2d495b;font-size:12px}.cite-result small{display:block;color:#81919d;font-size:10px;margin-top:3px}.notice{position:fixed;bottom:48px;left:50%;transform:translateX(-50%);padding:9px 14px;background:#173e51;color:white;border-radius:8px;box-shadow:var(--shadow);font-size:12px;z-index:20}.hidden{display:none!important}.mobile-close{display:none}
-@media(max-width:1100px){.layout{grid-template-columns:190px minmax(360px,1fr)}.inspector{display:none}}@media(max-width:760px){.topbar{padding:0 12px}.top-actions .pill{display:none}.layout{height:calc(100vh - 58px);grid-template-columns:1fr;min-height:0}.sidebar{display:none}.editor-split{grid-template-columns:1fr}.preview-pane{display:none}.layout.preview-mode .source-pane{display:none}.layout.preview-mode .preview-pane{display:block}.docbar{padding:0 10px}.toolbar{padding:5px 8px;overflow:auto}.source{padding:16px}.toolbar-label{display:none}.status-left span:nth-child(n+2){display:none}}
-</style></head>
+:root { --navy:#173e51; --ink:#172433; --muted:#657789; --paper:#fff; --wash:#edf2f6; --line:#d8e1e8; --cyan:#03a9f4; --mint:#8ed7c4; --gold:#ffbf47; --soft:#f7fafc; --shadow:0 12px 36px #173e5110 }
+* { box-sizing:border-box }
+body { margin:0; background:var(--wash); color:var(--ink); font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif }
+button,input,textarea { font:inherit }
+button { cursor:pointer }
+button:focus-visible,input:focus-visible,textarea:focus-visible { outline:3px solid var(--gold); outline-offset:2px }
+a { color:#087eb5 }
+.topbar { height:58px; background:var(--navy); color:white; display:flex; align-items:center; justify-content:space-between; padding:0 22px; box-shadow:0 2px 8px #102e3d20 }
+.brand { display:flex; align-items:center; gap:11px }
+.logo { width:31px; height:31px; border-radius:9px; background:var(--cyan); color:white; font-weight:900; display:grid; place-items:center; font-size:16px; box-shadow:inset 0 -3px 0 #006b9b }
+.brand h1 { font-size:15px; letter-spacing:.08em; margin:0; font-weight:800 }
+.brand small { display:block; color:#c4d5df; font-size:11px; letter-spacing:0; font-weight:500; margin-top:-2px }
+.top-actions { display:flex; align-items:center; gap:9px }
+.pill { font-size:11px; color:#d6e4ea; border:1px solid #6f8996; border-radius:20px; padding:5px 9px; display:flex; gap:6px; align-items:center }
+.dot { width:7px; height:7px; border-radius:50%; background:var(--mint) }
+.button { border:1px solid var(--line); background:white; color:var(--ink); border-radius:8px; padding:8px 11px; font-weight:650; transition:.15s }
+.button:hover { border-color:#8ca4b4; background:#fbfdff }
+.button.primary { background:var(--cyan); color:white; border-color:var(--cyan) }
+.button.primary:hover { background:#008ccc }
+.button.dark { background:#274e61; border-color:#567486; color:white }
+.button.small { padding:6px 9px; font-size:12px }
+.button.icon { width:34px; height:32px; padding:0; display:grid; place-items:center; font-size:16px }
+.layout { height:calc(100vh - 58px); min-height:580px; display:grid; grid-template-columns:230px minmax(380px,1fr) 285px; gap:0 }
+.sidebar,.inspector { background:#f8fafc; padding:18px 14px; border-right:1px solid var(--line); overflow:auto }
+.inspector { border-right:0; border-left:1px solid var(--line); background:#f7f9fb }
+.side-heading { display:flex; justify-content:space-between; align-items:center; padding:0 7px; margin:0 0 8px; color:#5c7180; font-size:10px; letter-spacing:.13em; font-weight:800; text-transform:uppercase }
+.side-heading button { border:0; background:transparent; color:#708493; font-size:17px }
+.workspace-name { display:flex; gap:9px; align-items:center; font-size:13px; font-weight:750; padding:10px 8px 14px }
+.folder-icon { color:#b58a36 }
+.file-list { list-style:none; padding:0; margin:0 }
+.file-list li { padding:7px 8px; border-radius:7px; display:flex; align-items:center; gap:8px; color:#435968; cursor:pointer; font-size:12px }
+.file-list li:hover { background:#eaf1f5 }
+.file-list li.active { background:#dff3fb; color:#075f87; font-weight:700 }
+.file-icon { width:15px; text-align:center; color:#77909e; font-size:12px }
+.separator { height:1px; background:var(--line); margin:17px 5px }
+.side-note { font-size:11px; color:#758795; padding:12px 8px; line-height:1.55 }
+.main { min-width:0; display:flex; flex-direction:column; background:var(--paper) }
+.docbar { height:48px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 17px; gap:10px }
+.doc-title { display:flex; align-items:center; gap:8px; font-weight:700; font-size:13px; min-width:0 }
+.doc-title span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.save-state { color:#718391; font-size:11px; font-weight:500 }
+.tabs { display:flex; gap:2px; background:#eef3f6; border-radius:8px; padding:3px }
+.tabs button { border:0; background:transparent; color:#607483; font-size:11px; font-weight:700; padding:5px 9px; border-radius:6px }
+.tabs button.on { background:white; color:var(--navy); box-shadow:0 1px 3px #173e511a }
+.toolbar { min-height:43px; border-bottom:1px solid #e8edf1; display:flex; align-items:center; gap:5px; padding:5px 15px }
+.toolbar .spacer { flex:1 }
+.toolbar-label { color:#8393a0; font-size:10px; margin:0 5px }
+.editor-split { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); flex:1; min-height:0 }
+.source-pane,.preview-pane { min-width:0; overflow:auto }
+.source-pane { border-right:1px solid var(--line); display:flex; flex-direction:column }
+.pane-label { height:31px; padding:7px 15px; border-bottom:1px solid #edf1f4; color:#7a8b98; font-size:10px; letter-spacing:.1em; font-weight:800; text-transform:uppercase; background:#fcfdfe }
+.source { resize:none; flex:1; width:100%; border:0; outline:none!important; padding:22px 24px 40px; background:white; color:#263c4b; font:13px/1.85 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; tab-size:2; white-space:pre-wrap }
+.source:focus { outline:none }
+.preview { max-width:760px; margin:0 auto; padding:28px 32px 54px; color:#263746; font:15px/1.75 Georgia,"Times New Roman",serif }
+.preview h1,.preview h2,.preview h3 { font-family:Inter,system-ui,sans-serif; color:#183d50; line-height:1.25 }
+.preview h1 { font-size:27px; border-bottom:1px solid #dce6ec; padding-bottom:11px; margin-top:4px }
+.preview h2 { font-size:20px; margin-top:30px }
+.preview h3 { font-size:16px; margin-top:24px }
+.preview p { margin:12px 0 }
+.preview blockquote { border-left:3px solid var(--cyan); margin:16px 0; padding:6px 14px; color:#647987; background:#f6fafc }
+.preview pre { background:#f0f4f6; padding:13px; border-radius:8px; overflow:auto }
+.preview code { font:12px ui-monospace,monospace; background:#f0f4f6; padding:2px 4px; border-radius:4px }
+.preview pre code { padding:0; background:transparent }
+.preview img { max-width:100%; border-radius:9px; border:1px solid #d8e1e8; display:block; margin:18px auto; box-shadow:0 8px 22px #173e5115 }
+.figure-caption { font:11px/1.5 Inter,system-ui,sans-serif; color:#6f818e; text-align:center; margin-top:-12px }
+.preview table { border-collapse:collapse; width:100%; font:12px Inter,system-ui,sans-serif }
+.preview td,.preview th { border:1px solid var(--line); padding:7px 9px; text-align:left }
+.preview th { background:#f2f6f8 }
+.references { border-top:1px solid var(--line); margin-top:35px; padding-top:18px }
+.references h2 { font-size:17px }
+.references ol { padding-left:22px; font-size:12px; line-height:1.6 }
+.empty-preview { color:#788b98; font:13px Inter,system-ui,sans-serif; text-align:center; padding:25vh 20px }
+.statusbar { height:32px; border-top:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 14px; color:#728492; font-size:10px }
+.status-left { display:flex; gap:15px }
+.status-green { color:#29866e }
+.panel-title { font-weight:800; color:#344e5e; font-size:12px; margin:0 0 11px }
+.card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:12px; box-shadow:0 2px 8px #173e5105 }
+.card p { font-size:11px; color:#708391; margin:6px 0 0; line-height:1.55 }
+.refs-empty { border:1px dashed #cbd7df; border-radius:9px; padding:17px 13px; text-align:center; color:#778b99; font-size:11px; line-height:1.5 }
+.refs-empty strong { display:block; color:#435b6b; font-size:12px; margin-bottom:4px }
+.ref-count { display:inline-block; background:#e4f4fa; color:#0878a5; padding:3px 8px; border-radius:20px; font-size:10px; font-weight:800 }
+.ref-list { margin:10px 0 0; max-height:210px; overflow:auto }
+.ref-item { padding:8px 3px; border-bottom:1px solid #edf1f3 }
+.ref-key { font:10px ui-monospace,monospace; color:#007cad }
+.ref-title { font-size:11px; color:#435967; line-height:1.35; margin-top:2px }
+.ref-meta { font-size:10px; color:#8796a0; margin-top:2px }
+.quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px }
+.quick-grid .button { font-size:11px; padding:7px 8px; text-align:left }
+.guide-list { padding-left:16px; margin:0; color:#718391; font-size:11px; line-height:1.8 }
+.privacy-note { padding:11px; background:#edf8f5; border-radius:8px; color:#3f7467; font-size:10px; line-height:1.5 }
+.modal-backdrop { position:fixed; inset:0; background:#102e3db0; z-index:10; display:grid; place-items:center; padding:20px }
+.modal { background:white; border-radius:14px; width:min(540px,100%); padding:21px; box-shadow:0 24px 80px #102e3d50 }
+.modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px }
+.modal-head h2 { font-size:17px; margin:0; color:var(--navy) }
+.close { border:0; background:transparent; font-size:21px; color:#728492 }
+.modal p { font-size:12px; color:#6e8190; line-height:1.6 }
+.field { margin:12px 0 }
+.field label { display:block; font-size:11px; font-weight:750; color:#4f6675; margin-bottom:5px }
+.field input { width:100%; border:1px solid #cbd7df; border-radius:7px; padding:9px 10px }
+.field small { display:block; color:#82929d; font-size:10px; margin-top:4px }
+.modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px }
+.cite-search { width:100%; border:1px solid #ccd9e0; border-radius:8px; padding:10px; margin:6px 0 10px }
+.cite-results { max-height:340px; overflow:auto }
+.cite-result { display:block; width:100%; text-align:left; border:0; border-bottom:1px solid #edf1f3; background:white; padding:10px 4px }
+.cite-result:hover { background:#f4fafc }
+.cite-result strong { display:block; color:#2d495b; font-size:12px }
+.cite-result small { display:block; color:#81919d; font-size:10px; margin-top:3px }
+.notice { position:fixed; bottom:48px; left:50%; transform:translateX(-50%); padding:9px 14px; background:#173e51; color:white; border-radius:8px; box-shadow:var(--shadow); font-size:12px; z-index:20 }
+.hidden { display:none!important }
+.layout.view-edit .editor-split, .layout.view-preview .editor-split { grid-template-columns:1fr }
+.layout.view-edit .preview-pane { display:none }
+.layout.view-edit .source-pane { border-right:0 }
+.layout.view-preview .source-pane { display:none }
+.file-list li:focus-visible { outline:3px solid var(--gold); outline-offset:1px }
+.file-list li.static { cursor:default }
+.file-list li.static:hover { background:transparent }
+.cite-missing { color:#b31b34 }
+.relative-link { color:#087eb5; border-bottom:1px dotted #087eb5; cursor:help }
+.missing-image { display:block; margin:18px auto; padding:18px; border:1px dashed #cbd7df; border-radius:9px; color:#6f818e; font:12px/1.5 Inter,system-ui,sans-serif; text-align:center }
+.front-matter { font:12px/1.6 ui-monospace,monospace; color:#5c7180; background:#f6fafc; border:1px solid #e4ecf1; border-radius:8px; padding:10px 13px; white-space:pre-wrap; margin:0 0 18px }
+.preview hr { border:0; border-top:1px solid var(--line); margin:26px 0 }
+.status-warn { color:#b07400 }
+@media(max-width:1100px) {
+  .layout { grid-template-columns:190px minmax(360px,1fr) }
+  .inspector { display:none }
+}
+@media(max-width:760px) {
+  .topbar { padding:0 12px }
+  .brand small { display:none }
+  .top-actions .pill { display:none }
+  .layout { height:calc(100vh - 58px); grid-template-columns:1fr; min-height:0 }
+  .sidebar { display:none }
+  .editor-split { grid-template-columns:1fr }
+  .preview-pane { display:none }
+  .layout.view-preview .source-pane { display:none }
+  .layout.view-preview .preview-pane { display:block }
+  .docbar { padding:0 10px }
+  .toolbar { padding:5px 8px; overflow:auto }
+  .source { padding:16px }
+  .toolbar-label { display:none }
+  .status-left span:nth-child(n+2) { display:none }
+}
+</style>
+</head>
 <body>
-<header class="topbar"><div class="brand"><div class="logo">M</div><div><h1>MANUMD</h1><small>Manuscript Markdown editor</small></div></div><div class="top-actions"><div class="pill"><span class="dot"></span>Local draft</div><button id="githubBtn" class="button dark small">↗ GitHub</button><button id="openBtn" class="button small">Open .md</button><button id="saveBtn" class="button primary small">Save draft</button></div></header>
-<div class="layout" id="layout">
-<aside class="sidebar"><div class="workspace-name"><span class="folder-icon">▰</span> Manuscript workspace</div><div class="side-heading">Draft files <button title="Add file" id="addFileBtn">＋</button></div><ul class="file-list" id="fileList"><li class="active" data-file="draft"><span class="file-icon">M</span><span>manuscript.md</span></li><li data-file="refs"><span class="file-icon">▤</span><span>references.bib</span></li><li><span class="file-icon">▧</span><span>figures/</span></li><li><span class="file-icon">▧</span><span>figure-1.svg</span></li></ul><div class="separator"></div><div class="side-heading">Quick actions</div><div class="quick-grid"><button class="button" id="citeBtn">＋ Citation</button><button class="button" id="bibBtn">Import .bib</button><button class="button" id="imageBtn">＋ Image</button><button class="button" id="downloadBtn">⇩ Download</button></div><div class="separator"></div><div class="side-heading">Writing setup</div><div class="side-note">A lightweight research editor built around plain Markdown, portable citations, and your existing GitHub workflow.</div><div class="privacy-note">Your draft stays in this browser until you download it or choose to save it to GitHub. Grammarly works through your installed browser extension, if available.</div></aside>
-<main class="main"><div class="docbar"><div class="doc-title"><span class="file-icon">M</span><span id="docName">manuscript.md</span><span class="save-state" id="saveState">· saved locally</span></div><div class="tabs"><button class="on" id="splitTab">Split</button><button id="editTab">Edit</button><button id="previewTab">Preview</button></div></div><div class="toolbar"><button class="button icon" data-wrap="**" title="Bold"><b>B</b></button><button class="button icon" data-wrap="*" title="Italic"><i>I</i></button><button class="button icon" data-prefix="# " title="Heading">H</button><button class="button icon" data-prefix="> " title="Quote">❞</button><button class="button icon" data-wrap="`" title="Code">&lt;/&gt;</button><button class="button icon" id="linkBtn" title="Insert link">↗</button><span class="toolbar-label">MARKDOWN</span><span class="spacer"></span><button class="button small" id="citeBtnTop">＋ Citation</button></div><div class="editor-split"><section class="source-pane"><div class="pane-label">Markdown source</div><textarea id="source" class="source" spellcheck="true" data-gramm="true" data-gramm_editor="true" aria-label="Markdown source editor"></textarea></section><section class="preview-pane"><div class="pane-label">Live preview <span style="float:right;color:#98a6ae;letter-spacing:0;font-weight:500;text-transform:none">GitHub-flavoured Markdown</span></div><article id="preview" class="preview"></article></section></div><footer class="statusbar"><div class="status-left"><span id="wordCount">0 words</span><span id="charCount">0 characters</span><span class="status-green">● Draft saved in this browser</span></div><span>Markdown · UTF-8</span></footer></main>
-<aside class="inspector"><h2 class="panel-title">References <span class="ref-count" id="refCount">0</span></h2><div class="card"><div style="display:flex;align-items:center;justify-content:space-between"><strong style="font-size:12px;color:#354e5d">Paperpile library</strong><button id="bibBtn2" class="button small">Import .bib</button></div><p>Sync a BibTeX file from Paperpile, then cite by key as you write.</p><div id="refsBox" class="refs-empty" style="margin-top:10px"><strong>No bibliography loaded yet</strong>Choose your synced <code>references.bib</code> file to search and insert citations.</div></div><div class="card"><strong style="font-size:12px;color:#354e5d">Citation syntax</strong><p>Use Pandoc-style citations such as <code>[@Smith2024]</code>. The preview formats them and builds a reference list from your BibTeX file.</p></div><h2 class="panel-title" style="margin-top:20px">Manuscript tools</h2><div class="card"><strong style="font-size:12px;color:#354e5d">Images and figures</strong><p>Open or add image files to preview them inline. Keep image paths relative so the manuscript stays portable in GitHub.</p><button id="imageBtn2" class="button small" style="margin-top:10px">Add image files</button></div><div class="card"><strong style="font-size:12px;color:#354e5d">GitHub workflow</strong><p>Load a manuscript from a repository, edit it here, then save a commit back to that file.</p><button id="githubBtn2" class="button small" style="margin-top:10px">Connect repository</button></div><div class="card"><strong style="font-size:12px;color:#354e5d">Keyboard shortcuts</strong><ul class="guide-list"><li>⌘/Ctrl + B — bold</li><li>⌘/Ctrl + I — italic</li><li>⌘/Ctrl + S — save</li><li>⌘/Ctrl + Shift + C — citation picker</li></ul></div></aside></div>
-<input id="mdFile" type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" class="hidden"><input id="bibFile" type="file" accept=".bib,.bibtex,text/plain" class="hidden"><input id="imageFiles" type="file" accept="image/*" multiple class="hidden"><div id="modalRoot"></div><div id="notice" class="notice hidden" role="status"></div>
+<header class="topbar">
+  <div class="brand"><div class="logo">M</div><div><h1>MANUMD</h1><small>Manuscript Markdown editor</small></div></div>
+  <div class="top-actions">
+    <div class="pill"><span class="dot"></span><span id="sourcePill">Local draft</span></div>
+    <button id="githubBtn" class="button dark small">↗ GitHub</button>
+    <button id="openBtn" class="button small">Open .md</button>
+    <button id="saveBtn" class="button primary small" title="Download the Markdown file (⌘/Ctrl + S)">Save draft</button>
+  </div>
+</header>
+<div class="layout view-split" id="layout">
+  <aside class="sidebar">
+    <div class="workspace-name"><span class="folder-icon">▰</span> Manuscript workspace</div>
+    <div class="side-heading">Draft files <button title="Start a new Markdown file" aria-label="Start a new Markdown file" id="addFileBtn">＋</button></div>
+    <ul class="file-list" id="fileList"></ul>
+    <div class="separator"></div>
+    <div class="side-heading">Quick actions</div>
+    <div class="quick-grid">
+      <button class="button" id="citeBtn">＋ Citation</button>
+      <button class="button" id="bibBtn">Import .bib</button>
+      <button class="button" id="imageBtn">＋ Image</button>
+      <button class="button" id="downloadBtn">⇩ Download</button>
+    </div>
+    <div class="separator"></div>
+    <div class="side-heading">Writing setup</div>
+    <div class="side-note">A lightweight research editor built around plain Markdown, portable citations, and your existing GitHub workflow.</div>
+    <div class="privacy-note">Your draft stays in this browser until you download it or choose to save it to GitHub. Grammarly works through your installed browser extension, if available; support in the Markdown text area depends on the browser and extension.</div>
+  </aside>
+  <main class="main">
+    <div class="docbar">
+      <div class="doc-title"><span class="file-icon">M</span><span id="docName">manuscript.md</span><span class="save-state" id="saveState">· saved locally</span></div>
+      <div class="tabs" role="group" aria-label="Editor view">
+        <button class="on" id="splitTab" data-view="split" aria-pressed="true">Split</button>
+        <button id="editTab" data-view="edit" aria-pressed="false">Edit</button>
+        <button id="previewTab" data-view="preview" aria-pressed="false">Preview</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="button icon" data-wrap="**" title="Bold (⌘/Ctrl + B)" aria-label="Bold"><b>B</b></button>
+      <button class="button icon" data-wrap="*" title="Italic (⌘/Ctrl + I)" aria-label="Italic"><i>I</i></button>
+      <button class="button icon" data-prefix="# " title="Heading" aria-label="Heading">H</button>
+      <button class="button icon" data-prefix="> " title="Quote" aria-label="Quote">❞</button>
+      <button class="button icon" data-wrap="`" title="Code" aria-label="Code">&lt;/&gt;</button>
+      <button class="button icon" id="linkBtn" title="Insert link" aria-label="Insert link">↗</button>
+      <span class="toolbar-label">MARKDOWN</span>
+      <span class="spacer"></span>
+      <button class="button small" id="citeBtnTop" title="Insert citation (⌘/Ctrl + Shift + C)">＋ Citation</button>
+    </div>
+    <div class="editor-split">
+      <section class="source-pane">
+        <div class="pane-label">Markdown source</div>
+        <textarea id="source" class="source" spellcheck="true" data-gramm="true" data-gramm_editor="true" aria-label="Markdown source editor"></textarea>
+      </section>
+      <section class="preview-pane">
+        <div class="pane-label">Live preview <span style="float:right;color:#98a6ae;letter-spacing:0;font-weight:500;text-transform:none">Common Markdown subset · Pandoc citations</span></div>
+        <article id="preview" class="preview" aria-live="off"></article>
+      </section>
+    </div>
+    <footer class="statusbar">
+      <div class="status-left">
+        <span id="wordCount">0 words</span>
+        <span id="charCount">0 characters</span>
+        <span id="storageStatus" class="status-green">● Draft saved in this browser</span>
+        <span id="citeStatus"></span>
+      </div>
+      <span>Markdown · UTF-8</span>
+    </footer>
+  </main>
+  <aside class="inspector">
+    <h2 class="panel-title">References <span class="ref-count" id="refCount">0</span></h2>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between"><strong style="font-size:12px;color:#354e5d">Paperpile library</strong><button id="bibBtn2" class="button small">Import .bib</button></div>
+      <p>Sync a BibTeX file from Paperpile, then cite by key as you write.</p>
+      <div id="refsBox" class="refs-empty" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <strong style="font-size:12px;color:#354e5d">Citation syntax</strong>
+      <p>Use Pandoc-style citations such as <code>[@Smith2024]</code>, <code>[@Smith2024; @Lee2023]</code> or <code>[see @Smith2024, p. 4]</code>. The preview formats them and builds a reference list from your BibTeX file.</p>
+    </div>
+    <h2 class="panel-title" style="margin-top:20px">Manuscript tools</h2>
+    <div class="card">
+      <strong style="font-size:12px;color:#354e5d">Images and figures</strong>
+      <p>Open or add image files to preview them inline. Keep image paths relative so the manuscript stays portable in GitHub. Images are previewed for this session only and are not committed to GitHub.</p>
+      <button id="imageBtn2" class="button small" style="margin-top:10px">Add image files</button>
+    </div>
+    <div class="card">
+      <strong style="font-size:12px;color:#354e5d">GitHub workflow</strong>
+      <p>Load a manuscript from a repository, edit it here, then save a commit back to that file.</p>
+      <button id="githubBtn2" class="button small" style="margin-top:10px">Connect repository</button>
+    </div>
+    <div class="card">
+      <strong style="font-size:12px;color:#354e5d">Keyboard shortcuts</strong>
+      <ul class="guide-list">
+        <li>⌘/Ctrl + B — bold</li>
+        <li>⌘/Ctrl + I — italic</li>
+        <li>⌘/Ctrl + S — download the Markdown file</li>
+        <li>⌘/Ctrl + Shift + C — citation picker</li>
+        <li>Esc — close a dialog</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+<input id="mdFile" type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" class="hidden">
+<input id="bibFile" type="file" accept=".bib,.bibtex,text/plain" class="hidden">
+<input id="imageFiles" type="file" accept="image/*" multiple class="hidden">
+<div id="modalRoot"></div>
+<div id="notice" class="notice hidden" role="status"></div>
 <script>
-const sample=`# The airway virome in chronic lung disease\n\n**Working draft** · Updated 16 October 2026\n\n## Introduction\n\nLongitudinal metagenomic sequencing can reveal ecological changes that precede the emergence of established airway pathogens. Here we combine community profiling with targeted analysis of bacterial and viral populations to describe changes in the cystic fibrosis airway microbiome.\n\n> Draft text for demonstration. Replace this sample with a manuscript section or open an existing Markdown file.\n\n## Results\n\nThe pilot cohort showed a measurable shift in microbial community structure over time (**Figure 1**). The figure below is an example asset; add your own image files to preview manuscript figures in place.\n\n![Illustrative microbiome profile](figure-1.svg)\n\n*Figure 1. Example inline figure preview using the ManuMD colour palette.*\n\n## Discussion\n\nThis section can include a citation from a Paperpile-exported bibliography, for example [@Edwards2024]. Load a `.bib` file and use the citation picker to insert keys from your library.\n\n### Next steps\n\n- Add the cohort-specific results and sample counts.\n- Check figure paths before committing changes.\n- Review the final references and journal style.\n`;
+// Sample content shown on first launch. Illustrative only.
+const sample=`# The airway virome in chronic lung disease\n\n**Working draft** · Updated 16 October 2026\n\n## Introduction\n\nLongitudinal metagenomic sequencing can reveal ecological changes that precede the emergence of established airway pathogens. Here we combine community profiling with targeted analysis of bacterial and viral populations to describe changes in the cystic fibrosis airway microbiome.\n\n> Draft text for demonstration. Replace this sample with a manuscript section or open an existing Markdown file.\n\n## Results\n\nThe pilot cohort showed a measurable shift in microbial community structure over time (**Figure 1**). The figure below is an example asset; add your own image files to preview manuscript figures in place.\n\n![Illustrative microbiome profile](figure-1.svg)\n\n*Figure 1. Example inline figure preview using the ManuMD colour palette.*\n\n## Discussion\n\nThis section can include a citation from a Paperpile-exported bibliography, for example [@Edwards2024]. Load a \`.bib\` file and use the citation picker to insert keys from your library.\n\n### Next steps\n\n- Add the cohort-specific results and sample counts.\n- Check figure paths before committing changes.\n- Review the final references and journal style.\n`;
 const sampleBib=`@article{Edwards2024,\n  author = {Edwards, Robert A. and colleagues},\n  title = {An example reference for the ManuMD demonstration},\n  journal = {Journal of Example Research},\n  year = {2024},\n  doi = {10.0000/example}\n}\n`;
 const sampleSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="350" viewBox="0 0 900 350"><rect width="900" height="350" rx="18" fill="#f7fafc"/><text x="48" y="44" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#173e51">Community profile across four visits</text><text x="48" y="69" font-family="Arial,sans-serif" font-size="12" fill="#657789">Illustrative values only · replace with your figure</text><g stroke="#d8e1e8" stroke-width="1"><path d="M80 105H850M80 160H850M80 215H850M80 270H850"/></g><g font-family="Arial,sans-serif" font-size="11" fill="#657789"><text x="39" y="109">100%</text><text x="48" y="164">75%</text><text x="48" y="219">50%</text><text x="48" y="274">25%</text><text x="118" y="302">Visit 1</text><text x="315" y="302">Visit 2</text><text x="512" y="302">Visit 3</text><text x="710" y="302">Visit 4</text></g><path d="M120 135 C205 145 250 205 335 184 S465 125 530 149 S660 221 730 199 S800 166 830 171" fill="none" stroke="#03a9f4" stroke-width="5" stroke-linecap="round"/><path d="M120 224 C205 208 260 166 335 179 S465 223 530 208 S660 150 730 160 S800 190 830 182" fill="none" stroke="#8ed7c4" stroke-width="5" stroke-linecap="round"/><path d="M120 258 C205 251 260 247 335 244 S465 238 530 242 S660 247 730 240 S800 237 830 232" fill="none" stroke="#ffbf47" stroke-width="4" stroke-linecap="round"/><g fill="#03a9f4"><circle cx="120" cy="135" r="6"/><circle cx="335" cy="184" r="6"/><circle cx="530" cy="149" r="6"/><circle cx="730" cy="199" r="6"/><circle cx="830" cy="171" r="6"/></g><g font-family="Arial,sans-serif" font-size="11" fill="#526475"><rect x="615" y="89" width="9" height="9" rx="3" fill="#03a9f4"/><text x="630" y="98">Pseudomonas</text><rect x="729" y="89" width="9" height="9" rx="3" fill="#8ed7c4"/><text x="744" y="98">Other taxa</text></g></svg>`;
-let bibText=localStorage.getItem('manumd-bib')||sampleBib;let images={'figure-1.svg':URL.createObjectURL(new Blob([sampleSvg],{type:'image/svg+xml'}))};let github=null;let saveTimer;const source=document.getElementById('source'),preview=document.getElementById('preview'),layout=document.getElementById('layout');source.value=localStorage.getItem('manumd-draft')||sample;
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function safeUrl(s){try{const u=new URL(s,location.href);return ['http:','https:','blob:','data:'].includes(u.protocol)?esc(s):'#'}catch{return '#'}}
-function parseBib(t){const out=[];const re=/@(\w+)\s*\{\s*([^,]+),([\s\S]*?)^\s*\}/gm;let m;while((m=re.exec(t))){const f={};for(const x of m[3].matchAll(/([\w-]+)\s*=\s*(?:\{([\s\S]*?)\}|"([\s\S]*?)"|([^,\n]+))\s*,?/g))f[x[1].toLowerCase()]=(x[2]||x[3]||x[4]||'').trim();out.push({type:m[1],key:m[2].trim(),...f})}return out}function authorShort(a=''){const names=a.split(/\s+and\s+/i).map(x=>x.trim());return names.length>2?names[0].split(',')[0]+' et al.':names.map(x=>x.split(',')[0]).join(' & ')}
-function inline(s){let t=esc(s);t=t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g,(_,a,u)=>`<img alt="${a}" src="${images[u]||safeUrl(u)}">`).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(_,a,u)=>`<a href="${safeUrl(u)}" target="_blank" rel="noopener">${a}</a>`).replace(/\[\@([\w:.-]+)\]/g,(_,k)=>{let r=parseBib(bibText).find(x=>x.key===k);return r?`<span title="${esc(r.title||k)}">(${esc(authorShort(r.author))}, ${esc(r.year||'n.d.')})</span>`:`<span style="color:#b31b34">[?${esc(k)}]</span>`}).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`([^`]+)`/g,'<code>$1</code>');return t}
-function renderMarkdown(md){const lines=md.replace(/\r/g,'').split('\n');let html='',para=[],list='',ordered=false,code=false,codebuf=[];const flush=()=>{if(para.length){html+='<p>'+inline(para.join(' '))+'</p>';para=[]}};const endList=()=>{if(list){html+=`</${ordered?'ol':'ul'}>`;list=''}};for(let line of lines){if(/^```/.test(line)){flush();endList();if(code){html+='<pre><code>'+esc(codebuf.join('\n'))+'</code></pre>';codebuf=[];code=false}else code=true;continue}if(code){codebuf.push(line);continue}if(!line.trim()){flush();endList();continue}let h=line.match(/^(#{1,6})\s+(.*)$/);if(h){flush();endList();let lv=h[1].length;html+=`<h${lv}>${inline(h[2])}</h${lv}>`;continue}let q=line.match(/^>\s?(.*)$/);if(q){flush();endList();html+=`<blockquote>${inline(q[1])}</blockquote>`;continue}let li=line.match(/^\s*([-*+] |\d+\. )(.*)$/);if(li){flush();let ord=/^\d/.test(li[1]);if(list&&ord!==ordered)endList();if(!list){ordered=ord;list=ord?'ol':'ul';html+=`<${list}>`}html+=`<li>${inline(li[2])}</li>`;continue}if(/^\|/.test(line)){flush();endList();const cells=line.split('|').slice(1,-1).map(x=>x.trim());if(cells.every(x=>/^:?-{3,}:?$/.test(x)))continue;html+='<div style="overflow:auto"><table><tbody><tr>'+cells.map(x=>`<td>${inline(x)}</td>`).join('')+'</tr></tbody></table></div>';continue}para.push(line)}flush();endList();if(code)html+='<pre><code>'+esc(codebuf.join('\n'))+'</code></pre>';return html}
-function updatePreview(){preview.innerHTML=renderMarkdown(source.value);const refs=parseBib(bibText),used=[...source.value.matchAll(/\[@([\w:.-]+)\]/g)].map(m=>m[1]),keys=[...new Set(used)].filter(k=>refs.some(r=>r.key===k));if(keys.length){preview.innerHTML+='<section class="references"><h2>References</h2><ol>'+keys.map(k=>{const r=refs.find(x=>x.key===k);return `<li>${esc(r.author||'')} (${esc(r.year||'n.d.')}). ${esc(r.title||k)}. <em>${esc(r.journal||'')}</em>${r.doi?`. DOI: ${esc(r.doi)}`:''}</li>`}).join('')+'</ol></section>'}const words=source.value.trim().split(/\s+/).filter(Boolean).length;document.getElementById('wordCount').textContent=words+' words';document.getElementById('charCount').textContent=source.value.length+' characters';document.getElementById('refCount').textContent=refs.length;renderRefList();}
-function renderRefList(){const box=document.getElementById('refsBox'),rs=parseBib(bibText);if(!rs.length){box.className='refs-empty';box.innerHTML='<strong>No bibliography loaded yet</strong>Choose your synced <code>references.bib</code> file to search and insert citations.';return}box.className='ref-list';box.innerHTML=rs.slice(0,50).map(r=>`<div class="ref-item"><div class="ref-key">@${esc(r.key)}</div><div class="ref-title">${esc(r.title||'Untitled reference')}</div><div class="ref-meta">${esc(authorShort(r.author))} · ${esc(r.year||'n.d.')}</div></div>`).join('')+(rs.length>50?`<div class="ref-meta">Showing 50 of ${rs.length} references</div>`:'')}
-function changed(){updatePreview();document.getElementById('saveState').textContent='· saving…';clearTimeout(saveTimer);saveTimer=setTimeout(()=>{localStorage.setItem('manumd-draft',source.value);document.getElementById('saveState').textContent='· saved locally'},450)}source.addEventListener('input',changed);updatePreview();
-function notify(msg){const n=document.getElementById('notice');n.textContent=msg;n.classList.remove('hidden');clearTimeout(n._t);n._t=setTimeout(()=>n.classList.add('hidden'),2600)}
-function modal(title,content){const root=document.getElementById('modalRoot');root.innerHTML=`<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true"><div class="modal-head"><h2>${title}</h2><button class="close" aria-label="Close">×</button></div>${content}</section></div>`;root.querySelector('.close').onclick=()=>root.innerHTML='';root.querySelector('.modal-backdrop').onclick=e=>{if(e.target.classList.contains('modal-backdrop'))root.innerHTML=''};return root.querySelector('.modal')}
-function citationPicker(){const rs=parseBib(bibText);if(!rs.length){document.getElementById('bibFile').click();notify('Load your Paperpile .bib file first');return}const m=modal('Insert a citation',`<p>Search your Paperpile bibliography. ManuMD inserts a Pandoc citation key at the cursor.</p><input class="cite-search" id="citeSearch" placeholder="Search author, title, year, or key…" autofocus><div class="cite-results" id="citeResults"></div>`);const search=m.querySelector('#citeSearch'),list=m.querySelector('#citeResults');const draw=()=>{let q=search.value.toLowerCase();list.innerHTML=rs.filter(r=>[r.key,r.author,r.title,r.year,r.journal].join(' ').toLowerCase().includes(q)).slice(0,80).map(r=>`<button class="cite-result" data-key="${esc(r.key)}"><strong>${esc(r.title||r.key)}</strong><small>${esc(authorShort(r.author))} · ${esc(r.year||'n.d.')} · @${esc(r.key)}</small></button>`).join('')||'<p>No matching references.</p>';list.querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>{insertText(`[@${b.dataset.key}]`);document.getElementById('modalRoot').innerHTML='';source.focus()})};search.oninput=draw;draw();search.focus()}
-function insertText(txt){let a=source.selectionStart,b=source.selectionEnd;source.setRangeText(txt,a,b,'end');changed();source.focus()}
-document.getElementById('citeBtn').onclick=citationPicker;document.getElementById('citeBtnTop').onclick=citationPicker;document.getElementById('bibBtn').onclick=()=>document.getElementById('bibFile').click();document.getElementById('bibBtn2').onclick=()=>document.getElementById('bibFile').click();document.getElementById('bibFile').onchange=e=>{let f=e.target.files[0];if(!f)return;f.text().then(t=>{bibText=t;localStorage.setItem('manumd-bib',t);renderRefList();updatePreview();document.querySelector('[data-file="refs"] span:last-child').textContent=f.name;notify(`Loaded ${parseBib(t).length} references`)});e.target.value=''};
-document.getElementById('mdFile').onchange=e=>{let f=e.target.files[0];if(!f)return;f.text().then(t=>{source.value=t;document.getElementById('docName').textContent=f.name;document.getElementById('saveState').textContent='· opened from device';changed()});e.target.value=''};document.getElementById('openBtn').onclick=()=>document.getElementById('mdFile').click();document.getElementById('saveBtn').onclick=downloadDraft;document.getElementById('downloadBtn').onclick=downloadDraft;function downloadDraft(){const blob=new Blob([source.value],{type:'text/markdown;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=document.getElementById('docName').textContent||'manuscript.md';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);notify('Markdown file downloaded')}
-document.getElementById('imageBtn').onclick=()=>document.getElementById('imageFiles').click();document.getElementById('imageBtn2').onclick=()=>document.getElementById('imageFiles').click();document.getElementById('imageFiles').onchange=e=>{const files=[...e.target.files];for(const f of files){images[f.name]=URL.createObjectURL(f);insertText(`![${f.name}](${f.name})`+'\n')}e.target.value='';notify(`${files.length} image${files.length===1?'':'s'} ready for inline preview`) };
-document.getElementById('linkBtn').onclick=()=>{const u=prompt('Link URL');if(u)insertText(`[link text](${u})`)};document.querySelectorAll('[data-wrap]').forEach(b=>b.onclick=()=>{let x=source.selectionStart,y=source.selectionEnd,sel=source.value.slice(x,y)||'text';source.setRangeText(b.dataset.wrap+sel+b.dataset.wrap,x,y,'select');changed();source.focus()});document.querySelectorAll('[data-prefix]').forEach(b=>b.onclick=()=>{let x=source.selectionStart,lineStart=source.value.lastIndexOf('\n',x-1)+1;source.setRangeText(b.dataset.prefix,lineStart,lineStart,'end');changed();source.focus()});
-document.getElementById('splitTab').onclick=()=>{layout.classList.remove('preview-mode');document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));document.getElementById('splitTab').classList.add('on')};document.getElementById('editTab').onclick=()=>{layout.classList.remove('preview-mode');document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));document.getElementById('editTab').classList.add('on');document.querySelector('.editor-split').style.gridTemplateColumns='1fr';document.querySelector('.preview-pane').style.display='none';document.querySelector('.source-pane').style.borderRight='0'};document.getElementById('previewTab').onclick=()=>{layout.classList.add('preview-mode');document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));document.getElementById('previewTab').classList.add('on');document.querySelector('.editor-split').style.gridTemplateColumns='1fr';document.querySelector('.source-pane').style.display='none';document.querySelector('.preview-pane').style.display='block'};document.getElementById('splitTab').addEventListener('click',()=>{document.querySelector('.editor-split').style.gridTemplateColumns='minmax(0,1fr) minmax(0,1fr)';document.querySelector('.source-pane').style.display='flex';document.querySelector('.preview-pane').style.display='block';document.querySelector('.source-pane').style.borderRight='1px solid var(--line)'});
-document.getElementById('addFileBtn').onclick=()=>{const name=prompt('New Markdown file name','section.md');if(name){document.getElementById('docName').textContent=name;source.value='';changed();notify('New draft started')}};document.getElementById('fileList').onclick=e=>{const li=e.target.closest('li');if(!li)return;if(li.dataset.file==='refs'){document.getElementById('bibFile').click();return}document.querySelectorAll('#fileList li').forEach(x=>x.classList.remove('active'));li.classList.add('active');if(li.dataset.file==='draft')document.getElementById('docName').textContent='manuscript.md'};
-function githubDialog(){const m=modal('Connect a GitHub repository',`<p>ManuMD runs entirely in this browser. Enter a repository and a fine-grained personal access token with <b>Contents: read and write</b> access. The token is kept in memory for this tab and is never sent to ManuMD’s server.</p><div class="field"><label>Repository</label><input id="ghRepo" placeholder="owner/repository" value="${github?esc(github.repo):''}"></div><div class="field"><label>Branch</label><input id="ghBranch" placeholder="main" value="${github?esc(github.branch):'main'}"></div><div class="field"><label>Markdown file path</label><input id="ghPath" placeholder="manuscript.md"></div><div class="field"><label>GitHub token</label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…"><small>For public files, a token is optional for reading. Saving a commit requires write access.</small></div><div class="modal-actions"><button class="button" id="ghCancel">Cancel</button><button class="button primary" id="ghLoad">Load file</button><button class="button" id="ghSave">Save commit</button></div>`);m.querySelector('#ghCancel').onclick=()=>document.getElementById('modalRoot').innerHTML='';m.querySelector('#ghLoad').onclick=()=>ghFile(m,false);m.querySelector('#ghSave').onclick=()=>ghFile(m,true)}
-async function ghFile(m,save){const repo=m.querySelector('#ghRepo').value.trim(),branch=m.querySelector('#ghBranch').value.trim()||'main',path=m.querySelector('#ghPath').value.trim(),token=m.querySelector('#ghToken').value.trim();if(!repo.includes('/')||!path){notify('Enter owner/repository and a file path');return}const headers={'Accept':'application/vnd.github+json'};if(token)headers.Authorization='Bearer '+token;try{const url=`https://api.github.com/repos/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(branch)}`;if(save){if(!token)throw Error('A GitHub token with Contents: write access is required to commit.');let old=await fetch(url,{headers});let sha=null;if(old.ok){let d=await old.json();sha=d.sha}else if(old.status!==404)throw Error('Could not read the existing file. Check repository, branch, path, and token.');const bytes=new TextEncoder().encode(source.value);let binary='';bytes.forEach(b=>binary+=String.fromCharCode(b));const payload={message:`Edit ${path} with ManuMD`,content:btoa(binary),branch,...(sha?{sha}:{})};let resp=await fetch(`https://api.github.com/repos/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify(payload)});let data=await resp.json();if(!resp.ok)throw Error(data.message||'GitHub rejected the commit.');github={repo,branch};document.getElementById('modalRoot').innerHTML='';document.getElementById('saveState').textContent='· committed to GitHub';notify('Commit saved to GitHub');return}else{let resp=await fetch(url,{headers});if(!resp.ok)throw Error(resp.status===404?'File not found. Check repository, branch, and path.':`GitHub request failed (${resp.status}).`);let d=await resp.json();if(d.type!=='file')throw Error('That path is not a file.');const raw=atob(d.content.replace(/\s/g,'')),arr=Uint8Array.from(raw,c=>c.charCodeAt(0));source.value=new TextDecoder().decode(arr);document.getElementById('docName').textContent=path.split('/').pop();github={repo,branch};changed();document.getElementById('modalRoot').innerHTML='';notify('Markdown loaded from GitHub')}}catch(err){notify(err.message||'GitHub request failed')}}document.getElementById('githubBtn').onclick=githubDialog;document.getElementById('githubBtn2').onclick=githubDialog;
-document.addEventListener('keydown',e=>{const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==='s'){e.preventDefault();downloadDraft()}if(mod&&e.shiftKey&&e.key.toLowerCase()==='c'){e.preventDefault();citationPicker()}if(mod&&e.key.toLowerCase()==='b'){e.preventDefault();insertText('**bold text**')}if(mod&&e.key.toLowerCase()==='i'){e.preventDefault();insertText('*italic text*')}});
-</script></body></html>
+
+// ---------------------------------------------------------------------------
+// Browser storage. localStorage can be unavailable (private windows, blocked
+// site data) or full (large bibliographies), so every access is guarded.
+// ---------------------------------------------------------------------------
+const STORE = { draft: 'manumd-draft', bib: 'manumd-bib', bibName: 'manumd-bib-name', docName: 'manumd-doc-name' };
+
+function load(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function store(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+const source = $('source');
+const preview = $('preview');
+const layout = $('layout');
+
+// Image previews are object URLs for this session only, keyed by file name.
+const images = { 'figure-1.svg': URL.createObjectURL(new Blob([sampleSvg], { type: 'image/svg+xml' })) };
+
+// GitHub connection: held in memory for this tab only. `github` describes the
+// file the current draft came from (or was last committed to), and changes
+// only when a load or save succeeds. The token is never written to storage.
+let github = null; // { repo, branch, path, sha }
+let githubToken = '';
+
+let library = { entries: [], byKey: new Map(), duplicates: 0 };
+let bibName = load(STORE.bibName) || 'references.bib';
+let docName = load(STORE.docName) || 'manuscript.md';
+let saveTimer = null;
+let renderQueued = false;
+let mdReadId = 0, bibReadId = 0; // latest local file reads
+
+// ---------------------------------------------------------------------------
+// HTML helpers. All user-authored text is escaped before it reaches innerHTML.
+// ---------------------------------------------------------------------------
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Returns an escaped URL that is safe for href/src, or null.
+function safeUrl(url, allowed = ['http:', 'https:', 'mailto:']) {
+  try {
+    const u = new URL(url);
+    return allowed.includes(u.protocol) ? esc(url) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Heading anchors are matched through data attributes rather than ids, so a
+// heading can never collide with the editor's own element ids.
+function slug(text) {
+  return text.toLowerCase().trim().replace(/[^\p{L}\p{N}\s_.-]/gu, '').replace(/\s+/g, '-');
+}
+
+// For a draft loaded from GitHub, resolve a relative link against its path.
+function githubBlobUrl(href) {
+  if (!github || !github.path) return null;
+  try {
+    const base = `https://github.com/${github.repo}/blob/${github.branch.split('/').map(encodeURIComponent).join('/')}/${github.path.split('/').map(encodeURIComponent).join('/')}`;
+    return safeUrl(new URL(href, base).href, ['https:']);
+  } catch {
+    return null;
+  }
+}
+
+function isRelativePath(url) {
+  return !/^[a-z][a-z0-9+.-]*:/i.test(url) && !url.startsWith('//');
+}
+
+// ---------------------------------------------------------------------------
+// BibTeX parsing. Paperpile exports quoted or braced values, nested braces for
+// protected capitals, LaTeX accents and escapes, and multi-line fields.
+// ---------------------------------------------------------------------------
+const ACCENTS = { '`': '\u0300', "'": '\u0301', '^': '\u0302', '~': '\u0303', '=': '\u0304', u: '\u0306', '.': '\u0307', '"': '\u0308', r: '\u030a', H: '\u030b', v: '\u030c', c: '\u0327', k: '\u0328' };
+const LATEX_SYMBOLS = { ss: 'ß', o: 'ø', O: 'Ø', aa: 'å', AA: 'Å', ae: 'æ', AE: 'Æ', oe: 'œ', OE: 'Œ', l: 'ł', L: 'Ł', i: 'ı', textendash: '–', textemdash: '—' };
+
+function cleanLatex(s) {
+  return s
+    .replace(/\\([`'^~=."]|[uvHrck](?=[\s{]))\s*\{?\s*\\?([A-Za-z])\}?/g, (_, a, ch) => ch + ACCENTS[a])
+    .replace(/\\(ss|aa|AA|ae|AE|oe|OE|o|O|l|L|i|textendash|textemdash)(?![A-Za-z])\s*/g, (_, k) => LATEX_SYMBOLS[k])
+    .replace(/\\([&%$#_{}])/g, '$1')
+    .replace(/\\[A-Za-z]+\*?\s*/g, '')
+    .replace(/[{}]/g, '')
+    .replace(/---/g, '—')
+    .replace(/--/g, '–')
+    .replace(/~/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .normalize('NFC');
+}
+
+// Splits an author list on top-level " and ", keeping {Braced Corporate Names}.
+function parseAuthors(raw) {
+  const parts = [];
+  const and = /\s+and\s+/iy;
+  let depth = 0, start = 0;
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === '{') depth++;
+    else if (raw[i] === '}') depth--;
+    else if (depth === 0) {
+      and.lastIndex = i;
+      const m = and.exec(raw);
+      if (m) {
+        parts.push(raw.slice(start, i));
+        start = i + m[0].length;
+        i = start - 1;
+      }
+    }
+  }
+  parts.push(raw.slice(start));
+  // True when the whole string is one {...} group, e.g. {National {HIV} Institute}.
+  const braced = p => {
+    if (!p.startsWith('{')) return false;
+    let d = 0;
+    for (let i = 0; i < p.length; i++) {
+      if (p[i] === '{') d++;
+      else if (p[i] === '}' && --d === 0) return i === p.length - 1;
+    }
+    return false;
+  };
+  const initials = first => first.split(/[\s.]+/).filter(Boolean).map(w => w[0] + '.').join(' ');
+  return parts.map(p => p.trim()).filter(Boolean).map(p => {
+    if (braced(p)) return { last: cleanLatex(p), full: cleanLatex(p) };
+    if (p.toLowerCase() === 'others') return { last: 'others', full: 'et al.' };
+    const name = cleanLatex(p);
+    // BibTeX name forms: "First Last", "Last, First" and "Last, Jr, First".
+    let last, first = '', suffix = '';
+    const parts = name.split(',').map(x => x.trim());
+    if (parts.length >= 3) [last, suffix, first] = parts;
+    else if (parts.length === 2) [last, first] = parts;
+    else {
+      // "First von Last": lowercase particles (von, van der, de la) belong to the family name.
+      const words = name.split(' ');
+      let start = words.findIndex((w, n) => n > 0 && n < words.length - 1 && /^[a-z]/.test(w));
+      if (start < 0) start = words.length - 1;
+      last = words.slice(start).join(' ');
+      first = words.slice(0, start).join(' ');
+    }
+    const full = [last, first && initials(first), suffix].filter(Boolean).join(', ');
+    return { last, full };
+  });
+}
+
+function parseBib(text) {
+  const entries = [];
+  const head = /@\s*([A-Za-z]+)\s*([{(])/g;
+  let m;
+  while ((m = head.exec(text))) {
+    const type = m[1].toLowerCase();
+    const close = m[2] === '{' ? '}' : ')';
+    let i = head.lastIndex;
+    if (type === 'comment' || type === 'preamble' || type === 'string') {
+      // Skip to the matching closing delimiter.
+      let depth = 1;
+      while (i < text.length && depth) {
+        if (text[i] === m[2]) depth++;
+        else if (text[i] === close) depth--;
+        i++;
+      }
+      head.lastIndex = i;
+      continue;
+    }
+    const keyMatch = /^\s*([^,\s{}()]*)\s*([,})])/.exec(text.slice(i, i + 300));
+    if (!keyMatch) continue;
+    const key = keyMatch[1];
+    i += keyMatch[0].length;
+    const fields = Object.create(null);
+    while (keyMatch[2] === ',' && i < text.length) {
+      while (i < text.length && /[\s,]/.test(text[i])) i++;
+      if (text[i] === close || i >= text.length) { i++; break; }
+      const nameMatch = /^([^\s=,{}()]+)\s*=\s*/.exec(text.slice(i, i + 200));
+      if (!nameMatch) break; // malformed entry: stop and move on
+      const name = nameMatch[1].toLowerCase();
+      i += nameMatch[0].length;
+      let value = '';
+      // A value is one or more pieces joined with '#'.
+      for (;;) {
+        while (/\s/.test(text[i])) i++;
+        if (text[i] === '{' || text[i] === '"') {
+          const quoted = text[i] === '"';
+          let depth = 0, j = i + 1;
+          for (; j < text.length; j++) {
+            const c = text[j];
+            if (c === '\\') { j++; continue; }
+            if (c === '{') depth++;
+            else if (c === '}') { if (depth === 0 && !quoted) break; depth--; }
+            else if (c === '"' && quoted && depth === 0) break;
+          }
+          value += text.slice(i + 1, j);
+          i = j + 1;
+        } else {
+          const word = /^[^\s,#{}()]+/.exec(text.slice(i, i + 200));
+          if (word) { value += word[0]; i += word[0].length; }
+        }
+        while (/\s/.test(text[i])) i++;
+        if (text[i] === '#') { i++; continue; }
+        break;
+      }
+      fields[name] = value;
+    }
+    head.lastIndex = i;
+    if (!key) continue;
+    const entry = { type, key, authors: parseAuthors(fields.author || fields.editor || '') };
+    for (const [name, value] of Object.entries(fields)) {
+      if (Object.hasOwn(entry, name)) continue; // a "key" or "type" field must not replace the entry's own
+      entry[name] = name === 'url' || name === 'doi' ? value.trim() : cleanLatex(value);
+    }
+    entries.push(entry);
+  }
+  return entries;
+}
+
+function setBibliography(text) {
+  // Keep the first entry for each key; later duplicates are ignored everywhere.
+  const byKey = new Map();
+  let duplicates = 0;
+  for (const e of parseBib(text)) {
+    if (byKey.has(e.key)) duplicates++;
+    else byKey.set(e.key, e);
+  }
+  library = { entries: [...byKey.values()], byKey, duplicates };
+}
+
+function authorShort(entry) {
+  const a = entry.authors;
+  if (!a.length) return entry.title ? entry.title.split(' ').slice(0, 3).join(' ') : entry.key;
+  if (a.length === 1) return a[0].last;
+  if (a.length === 2 && a[1].last !== 'others') return `${a[0].last} & ${a[1].last}`;
+  return `${a[0].last} et al.`;
+}
+
+function referenceHtml(r) {
+  const names = r.authors.map(a => a.full);
+  const authors = names.length > 1 ? names.slice(0, -1).join(', ') + (names[names.length - 1] === 'et al.' ? ' ' : ', & ') + names[names.length - 1] : names.join('');
+  const venue = r.journal || r.booktitle || r.publisher || '';
+  const volume = [r.volume, r.number ? `(${r.number})` : ''].join('');
+  const parts = [
+    `${esc(authors || authorShort(r))} (${esc(r.year || 'n.d.')}).`,
+    `${esc(r.title || r.key)}.`,
+    venue ? `<em>${esc(venue)}</em>${volume ? ', ' + esc(volume) : ''}${r.pages ? ', ' + esc(r.pages) : ''}.` : ''
+  ];
+  if (r.doi) {
+    const doi = r.doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
+    const href = safeUrl('https://doi.org/' + doi.split('/').map(encodeURIComponent).join('/'));
+    parts.push(`<a href="${href}" target="_blank" rel="noopener">doi:${esc(doi)}</a>`);
+  } else if (r.url && safeUrl(r.url)) {
+    parts.push(`<a href="${safeUrl(r.url)}" target="_blank" rel="noopener">${esc(r.url)}</a>`);
+  }
+  return parts.filter(Boolean).join(' ');
+}
+
+// ---------------------------------------------------------------------------
+// Markdown rendering: a deliberately small subset (headings, paragraphs,
+// emphasis, code, links, images, lists, quotes, tables, rules) plus Pandoc
+// citations. Inline HTML in the Markdown is shown as text, never rendered.
+// ---------------------------------------------------------------------------
+
+// Parses the inside of [...] as Pandoc citation items, or returns null if it
+// is not a citation (e.g. "[email me@x]").
+function parseCitationItems(content) {
+  const items = content.split(';').map(item => {
+    const m = item.match(/^(.*?)(-?)@([\w:.#$%&+?<>~/-]*\w)(.*)$/s);
+    if (!m || (m[1] && !/[\s(]$/.test(m[1]))) return null;
+    return { prefix: m[1].trim(), suppress: m[2] === '-', key: m[3], locator: m[4].replace(/^\s*,/, '').trim() };
+  });
+  return items.some(x => !x) ? null : items;
+}
+
+function renderCitation(content, cited) {
+  const items = parseCitationItems(content);
+  if (!items) return null;
+  const html = items.map(({ prefix, suppress, key, locator }) => {
+    cited.push(key);
+    const r = library.byKey.get(key);
+    if (!r) return `<span class="cite-missing" title="Not in the loaded bibliography">?${esc(key)}</span>`;
+    const body = suppress ? esc(r.year || 'n.d.') : `${esc(authorShort(r))}, ${esc(r.year || 'n.d.')}`;
+    return `${prefix ? esc(prefix) + ' ' : ''}<span title="${esc(r.title || key)}">${body}</span>${locator ? ', ' + esc(locator) : ''}`;
+  });
+  return `(${html.join('; ')})`;
+}
+
+function renderInline(text, cited) {
+  const tokens = [];
+  const hold = html => `\u0000${tokens.push(html) - 1}\u0000`;
+  let t = text.replace(/\u0000/g, '');
+
+  // Code spans first so nothing inside them is interpreted.
+  t = t.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (_, __, code) => hold(`<code>${esc(code.trim())}</code>`));
+
+  // Images: session images by path or file name, otherwise web URLs.
+  t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (_, alt, src) => {
+    let decoded = src;
+    try { decoded = decodeURI(src); } catch { /* keep as written */ }
+    const local = images[src] || images[decoded] || images[decoded.split('/').pop()];
+    if (local) return hold(`<img alt="${esc(alt)}" src="${esc(local)}">`);
+    if (isRelativePath(src)) return hold(`<span class="missing-image">Image not loaded: ${esc(decoded)}<br>Use “Add image files” to preview it in this session.</span>`);
+    const url = safeUrl(src, ['http:', 'https:']);
+    return hold(url ? `<img alt="${esc(alt)}" src="${url}">` : esc(alt));
+  });
+
+  // Links: web links open in a new tab, #fragments scroll the preview, and
+  // relative paths open the file on GitHub when the draft came from there.
+  t = t.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (_, label, href) => {
+    const inner = renderEmphasis(esc(label));
+    if (href.startsWith('#')) return hold(`<a href="${esc(href)}" data-fragment="${esc(slug(href.slice(1)))}">${inner}</a>`);
+    const url = safeUrl(href) || (isRelativePath(href) ? githubBlobUrl(href) : null);
+    if (url) return hold(`<a href="${url}" target="_blank" rel="noopener">${inner}</a>`);
+    return hold(`<span class="relative-link" title="${esc(isRelativePath(href) ? 'Relative link: ' + href : 'Link not shown: ' + href)}">${inner}</span>`);
+  });
+  t = t.replace(/<(https?:\/\/[^\s>]+)>/g, (whole, href) => {
+    const url = safeUrl(href);
+    return url ? hold(`<a href="${url}" target="_blank" rel="noopener">${esc(href)}</a>`) : whole;
+  });
+
+  // Bracketed Pandoc citations: [@a], [@a; @b], [see @a, p. 4], [-@a].
+  t = t.replace(/\[([^\[\]]*@[^\[\]]*)\]/g, (whole, content) => {
+    const html = renderCitation(content, cited);
+    return html ? hold(html) : whole;
+  });
+
+  return renderEmphasis(esc(t)).replace(/\u0000(\d+)\u0000/g, (_, n) => tokens[n]);
+}
+
+function renderEmphasis(t) {
+  return t
+    .replace(/\*\*(?=\S)(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|\W)__(?=\S)(.+?)__(?!\w)/g, '$1<strong>$2</strong>')
+    .replace(/\*(?=\S)(.+?)\*/g, '<em>$1</em>')
+    .replace(/(^|\W)_(?=\S)(.+?)_(?!\w)/g, '$1<em>$2</em>')
+    .replace(/~~(?=\S)(.+?)~~/g, '<del>$1</del>');
+}
+
+function splitRow(line) {
+  return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+}
+
+function renderMarkdown(md, cited) {
+  const lines = md.replace(/\r/g, '').split('\n');
+  const inline = s => renderInline(s, cited);
+  let html = '';
+  let para = [];
+  let list = null; // 'ul' | 'ol'
+  let quote = [];
+  let i = 0;
+
+  const flushPara = () => { if (para.length) { html += `<p>${inline(para.join(' '))}</p>`; para = []; } };
+  const endList = () => { if (list) { html += `</${list}>`; list = null; } };
+  const flushQuote = () => { if (quote.length) { html += `<blockquote>${renderMarkdown(quote.join('\n'), cited)}</blockquote>`; quote = []; } };
+  const flushAll = () => { flushPara(); endList(); flushQuote(); };
+
+  // YAML front matter (Pandoc metadata) is shown as-is in a muted box.
+  if (lines[0] === '---') {
+    const end = lines.findIndex((l, n) => n > 0 && (l === '---' || l === '...'));
+    if (end > 0) {
+      html += `<div class="front-matter">${esc(lines.slice(1, end).join('\n'))}</div>`;
+      i = end + 1;
+    }
+  }
+
+  for (; i < lines.length; i++) {
+    const line = lines[i];
+
+    const fence = line.match(/^\s*(```+|~~~+)/);
+    if (fence) {
+      flushAll();
+      const code = [];
+      for (i++; i < lines.length && !lines[i].trim().startsWith(fence[1]); i++) code.push(lines[i]);
+      html += `<pre><code>${esc(code.join('\n'))}</code></pre>`;
+      continue;
+    }
+
+    const q = line.match(/^\s*>\s?(.*)$/);
+    if (q) { flushPara(); endList(); quote.push(q[1]); continue; }
+    flushQuote();
+
+    if (!line.trim()) { flushPara(); endList(); continue; }
+
+    const h = line.match(/^(#{1,6})\s+(.*?)(?:\s+#+)?\s*$/);
+    if (h) {
+      flushAll();
+      const level = h[1].length;
+      const attrs = h[2].match(/\s*\{([^}]*)\}$/);
+      const text = attrs ? h[2].slice(0, attrs.index) : h[2];
+      const explicit = attrs && attrs[1].match(/#([^\s}]+)/);
+      const anchor = explicit ? explicit[1] : slug(text.replace(/[*_`]/g, ''));
+      html += `<h${level} data-anchor="${esc(slug(anchor))}">${inline(text)}</h${level}>`;
+      continue;
+    }
+
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) { flushAll(); html += '<hr>'; continue; }
+
+    const li = line.match(/^\s*([-*+]|\d+[.)])\s+(.*)$/);
+    if (li) {
+      flushPara();
+      const kind = /\d/.test(li[1]) ? 'ol' : 'ul';
+      if (list && list !== kind) endList();
+      if (!list) { list = kind; html += `<${kind}>`; }
+      html += `<li>${inline(li[2])}</li>`;
+      continue;
+    }
+
+    // Tables: a header row followed by a |---|---| delimiter row.
+    if (line.includes('|') && i + 1 < lines.length && lines[i + 1].includes('|') && /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/.test(lines[i + 1])) {
+      flushAll();
+      const header = splitRow(line);
+      const align = splitRow(lines[i + 1]).map(c => c.endsWith(':') ? (c.startsWith(':') ? 'center' : 'right') : 'left');
+      const cell = (tag, c, n) => `<${tag} style="text-align:${align[n] || 'left'}">${inline(c)}</${tag}>`;
+      let table = `<thead><tr>${header.map((c, n) => cell('th', c, n)).join('')}</tr></thead><tbody>`;
+      for (i += 2; i < lines.length && lines[i].includes('|') && lines[i].trim(); i++) {
+        table += `<tr>${splitRow(lines[i]).map((c, n) => cell('td', c, n)).join('')}</tr>`;
+      }
+      i--;
+      html += `<div style="overflow:auto"><table>${table}</tbody></table></div>`;
+      continue;
+    }
+
+    if (list && /^\s{2,}\S/.test(line)) {
+      // Continuation line of the previous list item.
+      const more = inline(line.trim());
+      html = html.replace(/<\/li>$/, () => ` ${more}</li>`);
+      continue;
+    }
+    endList();
+    para.push(line.trim());
+  }
+  flushAll();
+  return html;
+}
+
+// ---------------------------------------------------------------------------
+// Preview, status bar, reference panel and file list
+// ---------------------------------------------------------------------------
+function updatePreview() {
+  renderQueued = false;
+  const cited = [];
+  let html = renderMarkdown(source.value, cited);
+  const keys = [...new Set(cited)];
+  const found = keys.filter(k => library.byKey.has(k));
+  const missing = keys.filter(k => !library.byKey.has(k));
+  if (found.length) {
+    html += `<section class="references"><h2>References</h2><ol>${found.map(k => `<li>${referenceHtml(library.byKey.get(k))}</li>`).join('')}</ol></section>`;
+  }
+  preview.innerHTML = html;
+
+  const words = source.value.trim().split(/\s+/).filter(Boolean).length;
+  $('wordCount').textContent = `${words} word${words === 1 ? '' : 's'}`;
+  $('charCount').textContent = `${source.value.length} characters`;
+  const citeStatus = $('citeStatus');
+  citeStatus.className = missing.length ? 'status-warn' : '';
+  citeStatus.textContent = missing.length ? `${missing.length} citation key${missing.length === 1 ? '' : 's'} not in bibliography` : '';
+  citeStatus.title = missing.join(', ');
+}
+
+function schedulePreview() {
+  if (renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(updatePreview);
+}
+
+function setStorageStatus(ok) {
+  const el = $('storageStatus');
+  el.className = ok ? 'status-green' : 'status-warn';
+  el.textContent = ok ? '● Draft saved in this browser' : '● Browser storage unavailable or full — download your draft';
+}
+
+function renderRefList() {
+  const box = $('refsBox');
+  const rs = library.entries;
+  $('refCount').textContent = library.byKey.size;
+  if (!rs.length) {
+    box.className = 'refs-empty';
+    box.innerHTML = '<strong>No bibliography loaded yet</strong>Choose your synced <code>references.bib</code> file to search and insert citations.';
+    return;
+  }
+  box.className = 'ref-list';
+  box.innerHTML = rs.slice(0, 50).map(r => `<div class="ref-item"><div class="ref-key">@${esc(r.key)}</div><div class="ref-title">${esc(r.title || 'Untitled reference')}</div><div class="ref-meta">${esc(authorShort(r))} · ${esc(r.year || 'n.d.')}</div></div>`).join('') +
+    (rs.length > 50 ? `<div class="ref-meta">Showing 50 of ${rs.length} references</div>` : '');
+}
+
+function renderFileList() {
+  const items = [
+    `<li class="active" data-file="draft" tabindex="0" role="button" title="Focus the editor"><span class="file-icon">M</span><span>${esc(docName)}</span></li>`,
+    `<li data-file="refs" tabindex="0" role="button" title="Import a BibTeX file"><span class="file-icon">▤</span><span>${esc(bibName)}</span></li>`
+  ];
+  const names = Object.keys(images);
+  if (names.length) items.push('<li class="static"><span class="file-icon">▧</span><span>images (this session)</span></li>');
+  for (const name of names) {
+    items.push(`<li data-image="${esc(name)}" tabindex="0" role="button" title="Insert this image at the cursor"><span class="file-icon">▧</span><span>${esc(name)}</span></li>`);
+  }
+  $('fileList').innerHTML = items.join('');
+}
+
+function setDocName(name) {
+  docName = name || 'manuscript.md';
+  $('docName').textContent = docName;
+  renderFileList();
+}
+
+// The draft and its file name are stored together, name only after the text,
+// so a reload or a full browser storage never pairs one file's name with
+// another file's contents.
+function saveDraft() {
+  clearTimeout(saveTimer);
+  const ok = store(STORE.draft, source.value) && store(STORE.docName, docName);
+  setStorageStatus(ok);
+  $('saveState').textContent = ok ? '· saved locally' : '· not saved locally';
+}
+
+// Typing saves after a short pause; replacing the document saves at once.
+function changed(immediate = false) {
+  schedulePreview();
+  if (immediate) { saveDraft(); return; }
+  $('saveState').textContent = '· saving…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveDraft, 450);
+}
+
+// Opening or starting a file replaces the only local copy of the draft.
+function confirmReplaceDraft() {
+  return !source.value.trim() || source.value === sample || confirm('Replace the current draft? It is only stored in this browser — download it first if you want to keep a copy.');
+}
+
+function notify(msg) {
+  const n = $('notice');
+  n.textContent = msg;
+  n.classList.remove('hidden');
+  clearTimeout(n._t);
+  n._t = setTimeout(() => n.classList.add('hidden'), msg.length > 60 ? 5000 : 2600);
+}
+
+// ---------------------------------------------------------------------------
+// Modal dialogs: Escape closes, Tab stays inside, focus returns afterwards.
+// ---------------------------------------------------------------------------
+let modalReturnFocus = null;
+// While a GitHub request is in flight the dialog cannot be dismissed, so a
+// late response can never replace the draft or commit after an apparent cancel.
+let modalBusy = false;
+
+function closeModal(force = false) {
+  if (modalBusy && force !== true) { notify('Waiting for GitHub…'); return; }
+  $('modalRoot').innerHTML = '';
+  if (modalReturnFocus && document.contains(modalReturnFocus)) modalReturnFocus.focus();
+  modalReturnFocus = null;
+}
+
+function modal(title, content) {
+  const root = $('modalRoot');
+  if (!root.innerHTML) modalReturnFocus = document.activeElement;
+  root.innerHTML = `<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h2 id="modalTitle">${esc(title)}</h2><button class="close" aria-label="Close">×</button></div>${content}</section></div>`;
+  const m = root.querySelector('.modal');
+  root.querySelector('.close').onclick = () => closeModal();
+  root.querySelector('.modal-backdrop').onclick = e => { if (e.target.classList.contains('modal-backdrop')) closeModal(); };
+  m.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeModal(); return; }
+    if (e.key !== 'Tab') return;
+    const focusable = [...m.querySelectorAll('button, input, [tabindex="0"]')].filter(el => !el.disabled && el.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  return m;
+}
+
+// ---------------------------------------------------------------------------
+// Editing commands
+// ---------------------------------------------------------------------------
+function insertText(txt) {
+  source.setRangeText(txt, source.selectionStart, source.selectionEnd, 'end');
+  changed();
+  source.focus();
+}
+
+function wrapSelection(marker, placeholder) {
+  const a = source.selectionStart, b = source.selectionEnd;
+  const sel = source.value.slice(a, b) || placeholder;
+  source.setRangeText(marker + sel + marker, a, b, 'end');
+  source.setSelectionRange(a + marker.length, a + marker.length + sel.length);
+  changed();
+  source.focus();
+}
+
+function citationPicker() {
+  if (!library.entries.length) {
+    $('bibFile').click();
+    notify('Load your Paperpile .bib file first');
+    return;
+  }
+  const m = modal('Insert a citation', '<p>Search your Paperpile bibliography. ManuMD inserts a Pandoc citation key at the cursor. To cite several works together, insert them one after another and ManuMD joins them as <code>[@a; @b]</code>.</p><input class="cite-search" id="citeSearch" placeholder="Search author, title, year, or key…" aria-label="Search references"><div class="cite-results" id="citeResults"></div>');
+  const search = m.querySelector('#citeSearch'), list = m.querySelector('#citeResults');
+  const index = library.entries.map(r => [r.key, r.author, r.editor, r.title, r.year, r.journal, r.booktitle].join(' ').toLowerCase());
+  const draw = () => {
+    const terms = search.value.toLowerCase().split(/\s+/).filter(Boolean);
+    const hits = library.entries.filter((r, n) => terms.every(t => index[n].includes(t))).slice(0, 80);
+    list.innerHTML = hits.map(r => `<button class="cite-result" data-key="${esc(r.key)}"><strong>${esc(r.title || r.key)}</strong><small>${esc(authorShort(r))} · ${esc(r.year || 'n.d.')} · @${esc(r.key)}</small></button>`).join('') || '<p>No matching references.</p>';
+    list.querySelectorAll('[data-key]').forEach(b => b.onclick = () => {
+      modalReturnFocus = null;
+      closeModal();
+      insertCitation(b.dataset.key);
+    });
+  };
+  search.oninput = draw;
+  search.onkeydown = e => {
+    if (e.key === 'Enter') { const first = list.querySelector('[data-key]'); if (first) first.click(); }
+  };
+  draw();
+  search.focus();
+}
+
+// Inserts [@key], or merges into a citation group that ends at the cursor.
+function insertCitation(key) {
+  const a = source.selectionStart, b = source.selectionEnd;
+  const group = source.value.slice(0, a).match(/\[([^\[\]]*)\]$/);
+  if (a === b && group && parseCitationItems(group[1])) {
+    source.setRangeText(`; @${key}]`, a - 1, a, 'end');
+    changed();
+    source.focus();
+  } else {
+    insertText(`[@${key}]`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Files: Markdown, BibTeX and images
+// ---------------------------------------------------------------------------
+function loadBibText(text, name) {
+  setBibliography(text);
+  bibName = name;
+  const ok = store(STORE.bib, text) && store(STORE.bibName, name);
+  renderRefList();
+  renderFileList();
+  updatePreview();
+  let msg = `Loaded ${library.byKey.size} references`;
+  if (library.duplicates) msg += ` (${library.duplicates} duplicate key${library.duplicates === 1 ? '' : 's'} ignored)`;
+  if (!ok) msg += '. The library is too large to keep in browser storage; re-import it next session.';
+  notify(msg);
+}
+
+function downloadDraft() {
+  const blob = new Blob([source.value], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = docName;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  notify('Markdown file downloaded');
+}
+
+function addImages(files) {
+  for (const f of files) {
+    if (images[f.name]) URL.revokeObjectURL(images[f.name]);
+    images[f.name] = URL.createObjectURL(f);
+    insertImage(f.name);
+  }
+  renderFileList();
+  notify(`${files.length} image${files.length === 1 ? '' : 's'} ready for inline preview (this session only)`);
+}
+
+function insertImage(name) {
+  const alt = name.replace(/[\[\]]/g, '');
+  const path = encodeURI(name).replace(/\(/g, '%28').replace(/\)/g, '%29');
+  insertText(`![${alt}](${path})\n`);
+}
+
+// ---------------------------------------------------------------------------
+// GitHub: the browser talks directly to api.github.com with the user's token.
+// ---------------------------------------------------------------------------
+function githubDialog() {
+  const m = modal('Connect a GitHub repository', `<p>ManuMD runs entirely in this browser. Enter a repository and a fine-grained personal access token with <b>Contents: read and write</b> access. The token is kept in memory for this tab only and is sent directly to GitHub, never to ManuMD or any other server.</p>
+    <div class="field"><label for="ghRepo">Repository</label><input id="ghRepo" placeholder="owner/repository" autocomplete="off"></div>
+    <div class="field"><label for="ghBranch">Branch</label><input id="ghBranch" placeholder="main" autocomplete="off"></div>
+    <div class="field"><label for="ghPath">Markdown file path</label><input id="ghPath" placeholder="manuscript.md" autocomplete="off"></div>
+    <div class="field"><label for="ghToken">GitHub token</label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…"><small>For public files, a token is optional for reading. Saving a commit requires write access. Only the Markdown file is committed — image files are not uploaded.</small></div>
+    <div class="modal-actions"><button class="button" id="ghForget">Forget token</button><button class="button" id="ghCancel">Cancel</button><button class="button primary" id="ghLoad">Load file</button><button class="button" id="ghSave">Save commit</button></div>`);
+  m.querySelector('#ghRepo').value = github ? github.repo : '';
+  m.querySelector('#ghBranch').value = github ? github.branch : 'main';
+  m.querySelector('#ghPath').value = github ? github.path : '';
+  m.querySelector('#ghToken').value = githubToken;
+  m.querySelector('#ghForget').classList.toggle('hidden', !githubToken);
+  m.querySelector('#ghForget').onclick = () => {
+    githubToken = '';
+    m.querySelector('#ghToken').value = '';
+    m.querySelector('#ghForget').classList.add('hidden');
+    notify('Token removed from this tab');
+  };
+  m.querySelector('#ghCancel').onclick = () => closeModal();
+  m.querySelector('#ghLoad').onclick = () => githubFile(m, false);
+  m.querySelector('#ghSave').onclick = () => githubFile(m, true);
+  m.querySelector(github || githubToken ? '#ghToken' : '#ghRepo').focus();
+}
+
+// The draft no longer comes from a GitHub file: forget the connection
+// (the token, held separately, is kept) and reset the source indicator.
+function detachFromGithub() {
+  github = null;
+  $('sourcePill').textContent = 'Local draft';
+}
+
+function decodeBase64Utf8(b64) {
+  const raw = atob(b64.replace(/\s/g, ''));
+  return new TextDecoder().decode(Uint8Array.from(raw, c => c.charCodeAt(0)));
+}
+
+function encodeBase64Utf8(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+async function githubFile(m, save) {
+  const repo = m.querySelector('#ghRepo').value.trim().replace(/^https:\/\/github\.com\//, '').replace(/\.git$/, '').replace(/\/$/, '');
+  const branch = m.querySelector('#ghBranch').value.trim() || 'main';
+  const path = m.querySelector('#ghPath').value.trim().replace(/^\/+/, '');
+  const token = m.querySelector('#ghToken').value.trim();
+  if (!/^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/.test(repo) || /(^|\/)\.\.?$/.test(repo)) { notify('Enter the repository as owner/repository'); return; }
+  if (!path || path.split('/').some(p => !p || p === '.' || p === '..')) { notify('Enter the path of a file in the repository, e.g. paper/manuscript.md'); return; }
+
+  githubToken = token;
+  const sameFile = github && github.repo === repo && github.branch === branch && github.path === path;
+  const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  if (token) headers.Authorization = 'Bearer ' + token;
+  const fileUrl = `https://api.github.com/repos/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const buttons = m.querySelectorAll('.modal-actions button');
+  buttons.forEach(b => b.disabled = true);
+  m.querySelector('.close').disabled = true;
+  modalBusy = true;
+
+  try {
+    if (save) {
+      if (!token) throw Error('A GitHub token with Contents: write access is required to commit.');
+      let sha = sameFile ? github.sha : null;
+      if (!sha) {
+        // Not loaded from GitHub in this tab: check whether the file exists so
+        // we never overwrite it without asking.
+        const existing = await fetch(`${fileUrl}?ref=${encodeURIComponent(branch)}`, { headers });
+        if (existing.ok) {
+          sha = (await existing.json()).sha;
+          if (!confirm(`${path} already exists on ${branch}. Replace its contents with this draft?`)) return;
+        } else if (existing.status !== 404) {
+          throw Error(`Could not check the existing file (${existing.status}). Check the repository, branch, path and token.`);
+        }
+      }
+      const message = prompt('Commit message', `Edit ${path} with ManuMD`);
+      if (message === null) return;
+      const payload = { message: message || `Edit ${path} with ManuMD`, content: encodeBase64Utf8(source.value), branch, ...(sha ? { sha } : {}) };
+      const resp = await fetch(fileUrl, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await resp.json().catch(() => ({}));
+      if (resp.status === 409 || (resp.status === 422 && /sha/i.test(data.message || ''))) {
+        throw Error('The file changed on GitHub since you loaded it. Download your draft, then load the file again and reapply your edits.');
+      }
+      if (!resp.ok) throw Error(data.message ? `GitHub rejected the commit: ${data.message}` : `GitHub rejected the commit (${resp.status}).`);
+      github = { repo, branch, path, sha: data.content && data.content.sha };
+      closeModal(true);
+      $('saveState').textContent = '· committed to GitHub';
+      notify('Commit saved to GitHub');
+    } else {
+      if (!confirmReplaceDraft()) return;
+      const resp = await fetch(`${fileUrl}?ref=${encodeURIComponent(branch)}`, { headers });
+      if (!resp.ok) throw Error(resp.status === 404 ? 'File not found. Check the repository, branch and path (private repositories need a token).' : `GitHub request failed (${resp.status}).`);
+      const d = await resp.json();
+      if (d.type !== 'file') throw Error('That path is not a file.');
+      let text;
+      if (d.content && d.encoding === 'base64') {
+        text = decodeBase64Utf8(d.content);
+      } else {
+        // Files over 1 MB are returned without inline content.
+        const raw = await fetch(`${fileUrl}?ref=${encodeURIComponent(branch)}`, { headers: { ...headers, Accept: 'application/vnd.github.raw+json' } });
+        if (!raw.ok) throw Error(`GitHub request failed (${raw.status}).`);
+        text = await raw.text();
+      }
+      github = { repo, branch, path, sha: d.sha };
+      source.value = text;
+      setDocName(path.split('/').pop());
+      changed(true);
+      closeModal(true);
+      $('saveState').textContent = '· loaded from GitHub';
+      notify('Markdown loaded from GitHub');
+    }
+    $('sourcePill').textContent = `GitHub: ${repo}`;
+  } catch (err) {
+    notify(err.message || 'GitHub request failed');
+  } finally {
+    modalBusy = false;
+    buttons.forEach(b => b.disabled = false);
+    const close = m.querySelector('.close');
+    if (close) close.disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Views and event wiring
+// ---------------------------------------------------------------------------
+function setView(view) {
+  layout.classList.remove('view-split', 'view-edit', 'view-preview');
+  layout.classList.add('view-' + view);
+  document.querySelectorAll('.tabs button').forEach(b => {
+    const on = b.dataset.view === view;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on);
+  });
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
+
+source.addEventListener('input', () => changed());
+preview.addEventListener('click', e => {
+  const link = e.target.closest('a[data-fragment]');
+  if (!link) return;
+  e.preventDefault();
+  const target = preview.querySelector(`[data-anchor="${CSS.escape(link.dataset.fragment)}"]`);
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+$('citeBtn').onclick = citationPicker;
+$('citeBtnTop').onclick = citationPicker;
+$('bibBtn').onclick = () => $('bibFile').click();
+$('bibBtn2').onclick = () => $('bibFile').click();
+$('bibFile').onchange = e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  const readId = ++bibReadId;
+  f.text().then(t => { if (readId === bibReadId) loadBibText(t, f.name); });
+};
+
+$('openBtn').onclick = () => $('mdFile').click();
+$('mdFile').onchange = e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f || !confirmReplaceDraft()) return;
+  // Only the most recent read may replace the draft, and only if the draft
+  // was not edited while the file was being read.
+  const readId = ++mdReadId;
+  const before = source.value;
+  f.text().then(t => {
+    if (readId !== mdReadId) return;
+    if (source.value !== before) { notify(`${f.name} was not opened because the draft changed while it loaded. Open it again to replace the draft.`); return; }
+    source.value = t;
+    detachFromGithub();
+    setDocName(f.name);
+    changed(true);
+    $('saveState').textContent = '· opened from device';
+  });
+};
+$('saveBtn').onclick = downloadDraft;
+$('downloadBtn').onclick = downloadDraft;
+
+$('imageBtn').onclick = () => $('imageFiles').click();
+$('imageBtn2').onclick = () => $('imageFiles').click();
+$('imageFiles').onchange = e => {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (files.length) addImages(files);
+};
+
+$('linkBtn').onclick = () => {
+  const url = prompt('Link URL', 'https://');
+  if (!url || url === 'https://') return;
+  const label = source.value.slice(source.selectionStart, source.selectionEnd) || 'link text';
+  insertText(`[${label}](${url})`);
+};
+document.querySelectorAll('[data-wrap]').forEach(b => b.onclick = () => wrapSelection(b.dataset.wrap, 'text'));
+document.querySelectorAll('[data-prefix]').forEach(b => b.onclick = () => {
+  const lineStart = source.value.lastIndexOf('\n', source.selectionStart - 1) + 1;
+  source.setRangeText(b.dataset.prefix, lineStart, lineStart, 'end');
+  changed();
+  source.focus();
+});
+
+$('addFileBtn').onclick = () => {
+  if (!confirmReplaceDraft()) return;
+  const name = prompt('New Markdown file name', 'section.md');
+  if (!name) return;
+  source.value = '';
+  detachFromGithub();
+  setDocName(name.trim());
+  changed(true);
+  notify('New draft started');
+};
+
+function activateFileItem(li) {
+  if (!li || li.classList.contains('static')) return;
+  if (li.dataset.file === 'refs') $('bibFile').click();
+  else if (li.dataset.file === 'draft') source.focus();
+  else if (li.dataset.image) insertImage(li.dataset.image);
+}
+$('fileList').onclick = e => activateFileItem(e.target.closest('li'));
+$('fileList').onkeydown = e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activateFileItem(e.target.closest('li')); }
+};
+
+$('githubBtn').onclick = githubDialog;
+$('githubBtn2').onclick = githubDialog;
+
+document.addEventListener('keydown', e => {
+  const mod = e.ctrlKey || e.metaKey;
+  if (!mod) return;
+  const key = e.key.toLowerCase();
+  const modalOpen = !!$('modalRoot').innerHTML;
+  if (key === 's' && !e.shiftKey) { e.preventDefault(); downloadDraft(); }
+  else if (key === 'c' && e.shiftKey && !modalOpen) { e.preventDefault(); citationPicker(); }
+  else if (e.target === source && !e.shiftKey && key === 'b') { e.preventDefault(); wrapSelection('**', 'bold text'); }
+  else if (e.target === source && !e.shiftKey && key === 'i') { e.preventDefault(); wrapSelection('*', 'italic text'); }
+});
+
+// ---------------------------------------------------------------------------
+// Start up
+// ---------------------------------------------------------------------------
+source.value = load(STORE.draft) ?? sample;
+setBibliography(load(STORE.bib) ?? sampleBib);
+$('docName').textContent = docName;
+renderFileList();
+renderRefList();
+updatePreview();
+</script>
+</body>
+</html>
