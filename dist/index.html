@@ -384,7 +384,14 @@ function parseAuthors(raw) {
     const parts = name.split(',').map(x => x.trim());
     if (parts.length >= 3) [last, suffix, first] = parts;
     else if (parts.length === 2) [last, first] = parts;
-    else { const words = name.split(' '); last = words.pop(); first = words.join(' '); }
+    else {
+      // "First von Last": lowercase particles (von, van der, de la) belong to the family name.
+      const words = name.split(' ');
+      let start = words.findIndex((w, n) => n > 0 && n < words.length - 1 && /^[a-z]/.test(w));
+      if (start < 0) start = words.length - 1;
+      last = words.slice(start).join(' ');
+      first = words.slice(0, start).join(' ');
+    }
     const full = [last, first && initials(first), suffix].filter(Boolean).join(', ');
     return { last, full };
   });
