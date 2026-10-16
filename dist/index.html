@@ -1556,9 +1556,11 @@ async function syncGithubImages(conn, headers) {
   const folder = imageFolderPath(conn);
   if (!folder) return;
   const current = () => syncId === imageSyncId && sameImageFolder(conn);
-  let cached = false, listed = false; // wrote a blob; wrote its folder listing
+  let cached = false, listed = false, failed = false; // wrote a blob; wrote its listing; refresh failed
   try {
-    const url = `https://api.github.com/repos/${conn.repo}/contents/${folder.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(conn.branch)}`;
+    // The Git Trees API lists a folder by "branch:path" in one request, with
+    // up to 100,000 entries (the Contents API stops at 1,000).
+    const url = `https://api.github.com/repos/${conn.repo}/git/trees/${encodeURIComponent(`${conn.branch}:${folder}`)}`;
     const resp = await fetch(url, { headers });
     if (!current()) return;
     if (resp.status === 404) {
@@ -1569,9 +1571,14 @@ async function syncGithubImages(conn, headers) {
       return;
     }
     if (!resp.ok) throw Error(`GitHub request failed (${resp.status})`);
-    const list = await resp.json();
-    if (!Array.isArray(list)) throw Error(`${folder} is not a folder`);
-    const files = list.filter(f => f.type === 'file' && IMAGE_TYPES[f.name.split('.').pop().toLowerCase()]);
+    const tree = await resp.json();
+    if (!Array.isArray(tree.tree)) throw Error(`${folder} is not a folder`);
+    // A partial listing must not replace the saved one or prune the cache.
+    if (tree.truncated) throw Error(`${folder} has too many files for GitHub to list`);
+    const files = tree.tree
+      .filter(f => f.type === 'blob' && f.mode !== '120000') // files, not symlinks
+      .map(f => ({ name: f.path, sha: f.sha, size: f.size }))
+      .filter(f => IMAGE_TYPES[f.name.split('.').pop().toLowerCase()]);
     const entries = [], skipped = [];
     let downloaded = 0;
     for (const f of files) {
@@ -1599,7 +1606,11 @@ async function syncGithubImages(conn, headers) {
     if (skipped.length) msg += `. Not loaded: ${skipped.join(', ')}`;
     notify(msg);
   } catch (err) {
-    if (current()) notify(`Images were not loaded: ${err.message || 'GitHub request failed'}`);
+    if (current()) {
+      // Keep showing the last good copy of this folder, if one is cached.
+      notify(`Images were not refreshed: ${err.message || 'GitHub request failed'}. Showing cached images, if any.`);
+      failed = true;
+    }
   } finally {
     // Cancelled or failed after caching blobs that no listing refers to. A
     // newer sync's blobs stay protected; this sync's are released.
@@ -1607,6 +1618,7 @@ async function syncGithubImages(conn, headers) {
       using.clear();
       await pruneImageCache();
     }
+    if (failed && current()) await restoreRepoImages(conn);
   }
 }
 
