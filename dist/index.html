@@ -578,8 +578,8 @@ function renderInline(text, cited) {
   // followed by a non-space, the closing $ preceded by a non-space and not
   // followed by a digit (so "$100 and $1" is not math). \$ is a literal $.
   const math = s => s
-    .replace(/(?<!\\)\$\$([\s\S]+?)\$\$/g, (m, tex) => hold(mathHtml(tex, true), m))
-    .replace(/(?<![\\$])\$(?![\s$])((?:\\.|[^$\\])+?)(?<!\s)\$(?!\d)/g, (m, tex) => hold(mathHtml(tex, false), m))
+    .replace(/(?<!\\)\$\$([\s\S]+?)\$\$/g, (m, tex) => hold(mathHtml(plain(tex), true), plain(m)))
+    .replace(/(?<![\\$])\$(?![\s$])((?:\\.|[^$\\])+?)(?<!\s)\$(?!\d)/g, (m, tex) => hold(mathHtml(plain(tex), false), plain(m)))
     .replace(/\\\$/g, '$');
 
   // Code spans first so nothing inside them is interpreted.
@@ -615,13 +615,14 @@ function renderInline(text, cited) {
     return url ? hold(`<a href="${url}" target="_blank" rel="noopener">${esc(href)}</a>`, whole) : whole;
   });
 
+  // Math before citations, so "[@x]" inside an equation stays TeX.
+  t = math(t);
+
   // Bracketed Pandoc citations: [@a], [@a; @b], [see @a, p. 4], [-@a].
   t = t.replace(/\[([^\[\]]*@[^\[\]]*)\]/g, (whole, content) => {
     const html = renderCitation(content, cited);
     return html ? hold(html, whole) : whole;
   });
-
-  t = math(t);
 
   // Tokens can nest (math or code inside a link label), so restore until none remain.
   let html = renderEmphasis(esc(t));
