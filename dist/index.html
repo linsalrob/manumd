@@ -366,8 +366,6 @@ function imageUrl(src, decoded) {
   for (const set of [images, repoImages]) {
     const hit = set[src] || set[decoded] || set[path];
     if (hit) return hit;
-  }
-  for (const set of [images, repoImages]) {
     const key = Object.keys(set).find(k => k.split('/').pop() === name);
     if (key) return set[key];
   }
