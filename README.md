@@ -25,7 +25,7 @@ The preview uses a simple author–year style. It does not apply journal citatio
 
 ### Markdown preview
 
-The preview supports a common subset of Markdown: headings, paragraphs, bold, italic, strikethrough, inline code, fenced code blocks, links, images, bulleted and numbered lists (not nested), block quotes, tables with a header row, horizontal rules, and YAML front matter (shown as text). Raw HTML in the Markdown is displayed as text, not rendered.
+The preview supports a common subset of Markdown: headings, paragraphs, bold, italic, strikethrough, inline code, fenced code blocks, links (web links open in a new tab, `#heading` links scroll the preview, and relative links open the file on GitHub when the draft was loaded from there), images, bulleted and numbered lists (not nested), block quotes, tables with a header row, horizontal rules, and YAML front matter (shown as text). Raw HTML in the Markdown is displayed as text, not rendered.
 
 ## Privacy and limitations
 

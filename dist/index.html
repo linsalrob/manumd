@@ -121,6 +121,7 @@ a { color:#087eb5 }
 .file-list li.static { cursor:default }
 .file-list li.static:hover { background:transparent }
 .cite-missing { color:#b31b34 }
+.relative-link { color:#087eb5; border-bottom:1px dotted #087eb5; cursor:help }
 .missing-image { display:block; margin:18px auto; padding:18px; border:1px dashed #cbd7df; border-radius:9px; color:#6f818e; font:12px/1.5 Inter,system-ui,sans-serif; text-align:center }
 .front-matter { font:12px/1.6 ui-monospace,monospace; color:#5c7180; background:#f6fafc; border:1px solid #e4ecf1; border-radius:8px; padding:10px 13px; white-space:pre-wrap; margin:0 0 18px }
 .preview hr { border:0; border-top:1px solid var(--line); margin:26px 0 }
@@ -314,6 +315,23 @@ function safeUrl(url, allowed = ['http:', 'https:', 'mailto:']) {
   try {
     const u = new URL(url);
     return allowed.includes(u.protocol) ? esc(url) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Heading anchors are matched through data attributes rather than ids, so a
+// heading can never collide with the editor's own element ids.
+function slug(text) {
+  return text.toLowerCase().trim().replace(/[^\p{L}\p{N}\s_.-]/gu, '').replace(/\s+/g, '-');
+}
+
+// For a draft loaded from GitHub, resolve a relative link against its path.
+function githubBlobUrl(href) {
+  if (!github || !github.path) return null;
+  try {
+    const base = `https://github.com/${github.repo}/blob/${github.branch.split('/').map(encodeURIComponent).join('/')}/${github.path.split('/').map(encodeURIComponent).join('/')}`;
+    return safeUrl(new URL(href, base).href, ['https:']);
   } catch {
     return null;
   }
@@ -554,11 +572,14 @@ function renderInline(text, cited) {
     return hold(url ? `<img alt="${esc(alt)}" src="${url}">` : esc(alt));
   });
 
-  // Links.
+  // Links: web links open in a new tab, #fragments scroll the preview, and
+  // relative paths open the file on GitHub when the draft came from there.
   t = t.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (_, label, href) => {
-    const url = safeUrl(href);
     const inner = renderEmphasis(esc(label));
-    return hold(url ? `<a href="${url}" target="_blank" rel="noopener">${inner}</a>` : inner);
+    if (href.startsWith('#')) return hold(`<a href="${esc(href)}" data-fragment="${esc(slug(href.slice(1)))}">${inner}</a>`);
+    const url = safeUrl(href) || (isRelativePath(href) ? githubBlobUrl(href) : null);
+    if (url) return hold(`<a href="${url}" target="_blank" rel="noopener">${inner}</a>`);
+    return hold(`<span class="relative-link" title="${esc(isRelativePath(href) ? 'Relative link: ' + href : 'Link not shown: ' + href)}">${inner}</span>`);
   });
   t = t.replace(/<(https?:\/\/[^\s>]+)>/g, (whole, href) => {
     const url = safeUrl(href);
@@ -632,7 +653,11 @@ function renderMarkdown(md, cited) {
     if (h) {
       flushAll();
       const level = h[1].length;
-      html += `<h${level}>${inline(h[2].replace(/\s*\{[#.][^}]*\}$/, ''))}</h${level}>`;
+      const attrs = h[2].match(/\s*\{([^}]*)\}$/);
+      const text = attrs ? h[2].slice(0, attrs.index) : h[2];
+      const explicit = attrs && attrs[1].match(/#([^\s}]+)/);
+      const anchor = explicit ? explicit[1] : slug(text.replace(/[*_`]/g, ''));
+      html += `<h${level} data-anchor="${esc(slug(anchor))}">${inline(text)}</h${level}>`;
       continue;
     }
 
@@ -1053,6 +1078,13 @@ function setView(view) {
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
 
 source.addEventListener('input', () => changed());
+preview.addEventListener('click', e => {
+  const link = e.target.closest('a[data-fragment]');
+  if (!link) return;
+  e.preventDefault();
+  const target = preview.querySelector(`[data-anchor="${CSS.escape(link.dataset.fragment)}"]`);
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 
 $('citeBtn').onclick = citationPicker;
 $('citeBtnTop').onclick = citationPicker;
