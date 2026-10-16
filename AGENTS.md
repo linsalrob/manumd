@@ -11,7 +11,7 @@
 
 - Preserve the research-writing workflow: edit Markdown, see a live preview, insert citations from a Paperpile-exported BibTeX file, and open/download Markdown files.
 - Keep manuscript drafts and bibliography local to the browser by default.
-- GitHub integration must continue to use a token entered by the user, held only in tab memory, and sent directly from the browser to GitHub. Never add token persistence, telemetry, or a server-side manuscript store without an explicit product decision.
+- GitHub integration must continue to use a token entered by the user and sent directly from the browser to GitHub. By product decision (issue #7) the token may be kept in the tab's `sessionStorage` so it survives a reload and is cleared when the tab closes. Never write it to `localStorage`, IndexedDB or any other persistent store, and never add telemetry or a server-side manuscript store without an explicit product decision.
 - Be clear in the interface and README about limitations, especially around image asset commits and Grammarly browser-extension compatibility.
 - Keep the ManuMD palette consistent with GenBankViz: navy `#173e51`, ink `#172433`, pale blue-grey `#edf2f6`, cyan `#03a9f4`, mint `#8ed7c4`, and gold `#ffbf47`.
 

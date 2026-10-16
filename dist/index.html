@@ -237,12 +237,12 @@ a { color:#087eb5 }
     <h2 class="panel-title" style="margin-top:20px">Manuscript tools</h2>
     <div class="card">
       <strong style="font-size:12px;color:#354e5d">Images and figures</strong>
-      <p>Open or add image files to preview them inline. Keep image paths relative so the manuscript stays portable in GitHub. Images are previewed for this session only and are not committed to GitHub.</p>
+      <p>Open or add image files to preview them inline. Keep image paths relative so the manuscript stays portable in GitHub. Images added here are previewed for this session only. Images in the paper's images folder on GitHub are downloaded and cached when you load it. ManuMD never commits images.</p>
       <button id="imageBtn2" class="button small" style="margin-top:10px">Add image files</button>
     </div>
     <div class="card">
       <strong style="font-size:12px;color:#354e5d">GitHub workflow</strong>
-      <p>Load a manuscript from a repository, edit it here, then save a commit back to that file.</p>
+      <p>Load a manuscript from a repository, edit it here, then save a commit back to that file. The repository and file are remembered with the draft; the token is kept until you close the tab.</p>
       <button id="githubBtn2" class="button small" style="margin-top:10px">Connect repository</button>
     </div>
     <div class="card">
@@ -273,7 +273,10 @@ const sampleSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="350
 // Browser storage. localStorage can be unavailable (private windows, blocked
 // site data) or full (large bibliographies), so every access is guarded.
 // ---------------------------------------------------------------------------
-const STORE = { draft: 'manumd-draft', bib: 'manumd-bib', bibName: 'manumd-bib-name', docName: 'manumd-doc-name', syncScroll: 'manumd-sync-scroll' };
+const STORE = { draft: 'manumd-draft', bib: 'manumd-bib', bibName: 'manumd-bib-name', docName: 'manumd-doc-name', syncScroll: 'manumd-sync-scroll', github: 'manumd-github' };
+// The GitHub token is kept in sessionStorage only: it survives a reload but
+// is cleared when the tab is closed, and is never written to localStorage.
+const SESSION_TOKEN = 'manumd-github-token';
 
 function load(key) {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -288,6 +291,21 @@ function store(key, value) {
   }
 }
 
+function unstore(key) {
+  try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
+}
+
+function loadToken() {
+  try { return sessionStorage.getItem(SESSION_TOKEN) || ''; } catch { return ''; }
+}
+
+function storeToken(token) {
+  try {
+    if (token) sessionStorage.setItem(SESSION_TOKEN, token);
+    else sessionStorage.removeItem(SESSION_TOKEN);
+  } catch { /* storage unavailable: the token stays in memory only */ }
+}
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -297,14 +315,18 @@ const preview = $('preview');
 const layout = $('layout');
 const previewPane = document.querySelector('.preview-pane');
 
-// Image previews are object URLs for this session only, keyed by file name.
+// Image previews are object URLs keyed by path. `images` holds files added
+// in this session; `repoImages` holds images from the GitHub images folder,
+// which are also cached in IndexedDB (see "GitHub images" below).
 const images = { 'figure-1.svg': URL.createObjectURL(new Blob([sampleSvg], { type: 'image/svg+xml' })) };
+let repoImages = {};
 
-// GitHub connection: held in memory for this tab only. `github` describes the
-// file the current draft came from (or was last committed to), and changes
-// only when a load or save succeeds. The token is never written to storage.
-let github = null; // { repo, branch, path, sha }
-let githubToken = '';
+// GitHub connection. `github` describes the file the current draft came from
+// (or was last committed to) and changes only when a load or save succeeds.
+// It is stored with the draft so a reload keeps it. The token is held in
+// memory and in this tab's sessionStorage, never in localStorage.
+let github = null; // { repo, branch, path, sha, images }
+let githubToken = loadToken();
 
 let library = { entries: [], byKey: new Map(), duplicates: 0 };
 let bibName = load(STORE.bibName) || 'references.bib';
@@ -334,6 +356,22 @@ function safeUrl(url, allowed = ['http:', 'https:', 'mailto:']) {
 // heading can never collide with the editor's own element ids.
 function slug(text) {
   return text.toLowerCase().trim().replace(/[^\p{L}\p{N}\s_.-]/gu, '').replace(/\s+/g, '-');
+}
+
+// Finds a previewable image for a Markdown image path: by path, then by file
+// name. Images added in this session take precedence over GitHub images.
+function imageUrl(src, decoded) {
+  const path = decoded.replace(/^\.\//, '');
+  const name = path.split('/').pop();
+  for (const set of [images, repoImages]) {
+    const hit = set[src] || set[decoded] || set[path];
+    if (hit) return hit;
+  }
+  for (const set of [images, repoImages]) {
+    const key = Object.keys(set).find(k => k.split('/').pop() === name);
+    if (key) return set[key];
+  }
+  return null;
 }
 
 // For a draft loaded from GitHub, resolve a relative link against its path.
@@ -591,7 +629,7 @@ function renderInline(text, cited) {
     src = plain(src);
     let decoded = src;
     try { decoded = decodeURI(src); } catch { /* keep as written */ }
-    const local = images[src] || images[decoded] || images[decoded.split('/').pop()];
+    const local = imageUrl(src, decoded);
     if (local) return hold(`<img alt="${esc(alt)}" src="${esc(local)}">`, m);
     if (isRelativePath(src)) return hold(`<span class="missing-image">Image not loaded: ${esc(decoded)}<br>Use “Add image files” to preview it in this session.</span>`, m);
     const url = safeUrl(src, ['http:', 'https:']);
@@ -1067,11 +1105,15 @@ function renderFileList() {
     `<li class="active" data-file="draft" tabindex="0" role="button" title="Focus the editor"><span class="file-icon">M</span><span>${esc(docName)}</span></li>`,
     `<li data-file="refs" tabindex="0" role="button" title="Import a BibTeX file"><span class="file-icon">▤</span><span>${esc(bibName)}</span></li>`
   ];
-  const names = Object.keys(images);
-  if (names.length) items.push('<li class="static"><span class="file-icon">▧</span><span>images (this session)</span></li>');
-  for (const name of names) {
-    items.push(`<li data-image="${esc(name)}" tabindex="0" role="button" title="Insert this image at the cursor"><span class="file-icon">▧</span><span>${esc(name)}</span></li>`);
-  }
+  const group = (label, names) => {
+    if (!names.length) return;
+    items.push(`<li class="static"><span class="file-icon">▧</span><span>${esc(label)}</span></li>`);
+    for (const name of names) {
+      items.push(`<li data-image="${esc(name)}" tabindex="0" role="button" title="Insert this image at the cursor"><span class="file-icon">▧</span><span>${esc(name)}</span></li>`);
+    }
+  };
+  group('images (from GitHub)', Object.keys(repoImages));
+  group('images (this session)', Object.keys(images));
   $('fileList').innerHTML = items.join('');
 }
 
@@ -1252,19 +1294,22 @@ function insertImage(name) {
 // GitHub: the browser talks directly to api.github.com with the user's token.
 // ---------------------------------------------------------------------------
 function githubDialog() {
-  const m = modal('Connect a GitHub repository', `<p>ManuMD runs entirely in this browser. Enter a repository and a fine-grained personal access token with <b>Contents: read and write</b> access. The token is kept in memory for this tab only and is sent directly to GitHub, never to ManuMD or any other server.</p>
+  const m = modal('Connect a GitHub repository', `<p>ManuMD runs entirely in this browser. Enter a repository and a fine-grained personal access token with <b>Contents: read and write</b> access. The token is kept for this tab until you close it (it survives a reload) and is sent directly to GitHub, never to ManuMD or any other server.</p>
     <div class="field"><label for="ghRepo">Repository</label><input id="ghRepo" placeholder="owner/repository" autocomplete="off"></div>
     <div class="field"><label for="ghBranch">Branch</label><input id="ghBranch" placeholder="main" autocomplete="off"></div>
     <div class="field"><label for="ghPath">Markdown file path</label><input id="ghPath" placeholder="manuscript.md" autocomplete="off"></div>
+    <div class="field"><label for="ghImages">Images folder</label><input id="ghImages" placeholder="images" autocomplete="off"><small>Relative to the Markdown file. Images in this folder are downloaded when you load the file and cached in this browser; later loads only download images that have changed. Leave empty to skip images.</small></div>
     <div class="field"><label for="ghToken">GitHub token</label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…"><small>For public files, a token is optional for reading. Saving a commit requires write access. Only the Markdown file is committed — image files are not uploaded.</small></div>
     <div class="modal-actions"><button class="button" id="ghForget">Forget token</button><button class="button" id="ghCancel">Cancel</button><button class="button primary" id="ghLoad">Load file</button><button class="button" id="ghSave">Save commit</button></div>`);
   m.querySelector('#ghRepo').value = github ? github.repo : '';
   m.querySelector('#ghBranch').value = github ? github.branch : 'main';
   m.querySelector('#ghPath').value = github ? github.path : '';
+  m.querySelector('#ghImages').value = github ? github.images : DEFAULT_IMAGES_FOLDER;
   m.querySelector('#ghToken').value = githubToken;
   m.querySelector('#ghForget').classList.toggle('hidden', !githubToken);
   m.querySelector('#ghForget').onclick = () => {
     githubToken = '';
+    storeToken('');
     m.querySelector('#ghToken').value = '';
     m.querySelector('#ghForget').classList.add('hidden');
     notify('Token removed from this tab');
@@ -1275,11 +1320,33 @@ function githubDialog() {
   m.querySelector(github || githubToken ? '#ghToken' : '#ghRepo').focus();
 }
 
-// The draft no longer comes from a GitHub file: forget the connection
-// (the token, held separately, is kept) and reset the source indicator.
+const DEFAULT_IMAGES_FOLDER = 'images';
+
+// Records the GitHub file the draft belongs to, in memory and with the draft
+// in localStorage (the token is not part of it).
+function setGithub(conn) {
+  github = conn;
+  if (conn) store(STORE.github, JSON.stringify(conn));
+  else unstore(STORE.github);
+  $('sourcePill').textContent = conn ? `GitHub: ${conn.repo}` : 'Local draft';
+}
+
+// The draft no longer comes from a GitHub file: forget the connection and
+// that paper's images (the token, held separately, is kept).
 function detachFromGithub() {
-  github = null;
-  $('sourcePill').textContent = 'Local draft';
+  setGithub(null);
+  imageSyncId++;
+  setRepoImages([]);
+}
+
+// Restores the connection saved with the draft, if it is well formed.
+function restoreGithub() {
+  let conn = null;
+  try { conn = JSON.parse(load(STORE.github)); } catch { /* ignore */ }
+  const str = v => typeof v === 'string';
+  if (!conn || !str(conn.repo) || !str(conn.branch) || !str(conn.path) || load(STORE.draft) === null) { unstore(STORE.github); return; }
+  setGithub({ repo: conn.repo, branch: conn.branch, path: conn.path, sha: str(conn.sha) ? conn.sha : null, images: str(conn.images) ? conn.images : DEFAULT_IMAGES_FOLDER });
+  restoreRepoImages(github);
 }
 
 function decodeBase64Utf8(b64) {
@@ -1298,11 +1365,14 @@ async function githubFile(m, save) {
   const repo = m.querySelector('#ghRepo').value.trim().replace(/^https:\/\/github\.com\//, '').replace(/\.git$/, '').replace(/\/$/, '');
   const branch = m.querySelector('#ghBranch').value.trim() || 'main';
   const path = m.querySelector('#ghPath').value.trim().replace(/^\/+/, '');
+  const imagesFolder = m.querySelector('#ghImages').value.trim().replace(/^\.\/|^\/+|\/+$/g, '');
   const token = m.querySelector('#ghToken').value.trim();
   if (!/^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/.test(repo) || /(^|\/)\.\.?$/.test(repo)) { notify('Enter the repository as owner/repository'); return; }
   if (!path || path.split('/').some(p => !p || p === '.' || p === '..')) { notify('Enter the path of a file in the repository, e.g. paper/manuscript.md'); return; }
+  if (imagesFolder && imagesFolder.split('/').some(p => !p || p === '.' || p === '..')) { notify('Enter the images folder relative to the Markdown file, e.g. images'); return; }
 
   githubToken = token;
+  storeToken(token);
   const sameFile = github && github.repo === repo && github.branch === branch && github.path === path;
   const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
   if (token) headers.Authorization = 'Bearer ' + token;
@@ -1336,7 +1406,7 @@ async function githubFile(m, save) {
         throw Error('The file changed on GitHub since you loaded it. Download your draft, then load the file again and reapply your edits.');
       }
       if (!resp.ok) throw Error(data.message ? `GitHub rejected the commit: ${data.message}` : `GitHub rejected the commit (${resp.status}).`);
-      github = { repo, branch, path, sha: data.content && data.content.sha };
+      setGithub({ repo, branch, path, sha: data.content && data.content.sha, images: imagesFolder });
       closeModal(true);
       $('saveState').textContent = '· committed to GitHub';
       notify('Commit saved to GitHub');
@@ -1355,15 +1425,16 @@ async function githubFile(m, save) {
         if (!raw.ok) throw Error(`GitHub request failed (${raw.status}).`);
         text = await raw.text();
       }
-      github = { repo, branch, path, sha: d.sha };
+      setGithub({ repo, branch, path, sha: d.sha, images: imagesFolder });
       source.value = text;
       setDocName(path.split('/').pop());
+      setRepoImages([]);
       changed(true);
       closeModal(true);
       $('saveState').textContent = '· loaded from GitHub';
       notify('Markdown loaded from GitHub');
+      imageSync = syncGithubImages(github, headers);
     }
-    $('sourcePill').textContent = `GitHub: ${repo}`;
   } catch (err) {
     notify(err.message || 'GitHub request failed');
   } finally {
@@ -1371,6 +1442,151 @@ async function githubFile(m, save) {
     buttons.forEach(b => b.disabled = false);
     const close = m.querySelector('.close');
     if (close) close.disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GitHub images. Loading a file also fetches the images folder next to it.
+// Each image is cached in IndexedDB under its Git blob SHA, which changes
+// whenever the file's contents change, so later loads (and reloads of the
+// page, even offline) reuse cached images and only download changed ones.
+// ---------------------------------------------------------------------------
+const IMAGE_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', avif: 'image/avif', bmp: 'image/bmp' };
+const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
+let imageSyncId = 0;
+let imageSync = Promise.resolve(); // the latest sync, for tests and callers
+
+let imageDb = null;
+function openImageDb() {
+  if (!imageDb) {
+    imageDb = new Promise(resolve => {
+      try {
+        const req = indexedDB.open('manumd-images', 1);
+        req.onupgradeneeded = () => {
+          req.result.createObjectStore('blobs');   // blob SHA -> Blob
+          req.result.createObjectStore('folders'); // folder key -> [{ name, sha }]
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = req.onblocked = () => resolve(null);
+      } catch {
+        resolve(null); // IndexedDB unavailable: images are kept for this session only
+      }
+    });
+  }
+  return imageDb;
+}
+
+// Runs one request against an object store; resolves undefined on any failure.
+async function imageDbRequest(storeName, mode, makeRequest) {
+  const db = await openImageDb();
+  if (!db) return undefined;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction(storeName, mode);
+      const req = makeRequest(tx.objectStore(storeName));
+      tx.oncomplete = () => resolve(req.result);
+      tx.onerror = tx.onabort = () => resolve(undefined);
+    } catch {
+      resolve(undefined);
+    }
+  });
+}
+
+function imageFolderPath(conn) {
+  if (!conn.images) return '';
+  const dir = conn.path.split('/').slice(0, -1).join('/');
+  return dir ? `${dir}/${conn.images}` : conn.images;
+}
+
+function imageFolderKey(conn) {
+  return `${conn.repo}\n${conn.branch}\n${imageFolderPath(conn)}`;
+}
+
+// A sync or restore applies only while the draft still belongs to that folder
+// (a commit replaces the connection object but keeps the folder).
+function sameImageFolder(conn) {
+  return !!github && imageFolderKey(github) === imageFolderKey(conn);
+}
+
+// Replaces the GitHub images shown in the preview. `entries` are { name, blob }
+// where name is the path relative to the Markdown file, e.g. images/fig1.png.
+function setRepoImages(entries) {
+  for (const url of Object.values(repoImages)) URL.revokeObjectURL(url);
+  repoImages = {};
+  for (const e of entries) repoImages[e.name] = URL.createObjectURL(e.blob);
+  renderFileList();
+  updatePreview();
+}
+
+// Shows the cached images for a connection without using the network.
+async function restoreRepoImages(conn) {
+  const syncId = ++imageSyncId;
+  if (!imageFolderPath(conn)) return;
+  const listing = await imageDbRequest('folders', 'readonly', s => s.get(imageFolderKey(conn)));
+  if (!Array.isArray(listing)) return;
+  const entries = [];
+  for (const { name, sha } of listing) {
+    const blob = await imageDbRequest('blobs', 'readonly', s => s.get(sha));
+    if (blob) entries.push({ name, blob });
+  }
+  if (syncId === imageSyncId && sameImageFolder(conn)) setRepoImages(entries);
+}
+
+async function syncGithubImages(conn, headers) {
+  const syncId = ++imageSyncId;
+  const folder = imageFolderPath(conn);
+  if (!folder) return;
+  const current = () => syncId === imageSyncId && sameImageFolder(conn);
+  try {
+    const url = `https://api.github.com/repos/${conn.repo}/contents/${folder.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(conn.branch)}`;
+    const resp = await fetch(url, { headers });
+    if (!current()) return;
+    if (resp.status === 404) {
+      await imageDbRequest('folders', 'readwrite', s => s.put([], imageFolderKey(conn)));
+      notify(`No ${conn.images}/ folder next to ${conn.path.split('/').pop()}, so no images were loaded`);
+      return;
+    }
+    if (!resp.ok) throw Error(`GitHub request failed (${resp.status})`);
+    const list = await resp.json();
+    if (!Array.isArray(list)) throw Error(`${folder} is not a folder`);
+    const files = list.filter(f => f.type === 'file' && IMAGE_TYPES[f.name.split('.').pop().toLowerCase()]);
+    const entries = [], skipped = [];
+    let downloaded = 0;
+    for (const f of files) {
+      const type = IMAGE_TYPES[f.name.split('.').pop().toLowerCase()];
+      let blob = await imageDbRequest('blobs', 'readonly', s => s.get(f.sha));
+      if (!blob) {
+        if (f.size > MAX_IMAGE_BYTES) { skipped.push(f.name); continue; }
+        const raw = await fetch(`https://api.github.com/repos/${conn.repo}/git/blobs/${encodeURIComponent(f.sha)}`, { headers: { ...headers, Accept: 'application/vnd.github.raw+json' } });
+        if (!current()) return;
+        if (!raw.ok) { skipped.push(f.name); continue; }
+        blob = new Blob([await raw.arrayBuffer()], { type });
+        await imageDbRequest('blobs', 'readwrite', s => s.put(blob, f.sha));
+        downloaded++;
+      }
+      entries.push({ name: `${conn.images}/${f.name}`, sha: f.sha, blob });
+    }
+    if (!current()) return;
+    await imageDbRequest('folders', 'readwrite', s => s.put(entries.map(({ name, sha }) => ({ name, sha })), imageFolderKey(conn)));
+    await pruneImageCache();
+    if (!current()) return;
+    setRepoImages(entries);
+    let msg = `${entries.length} image${entries.length === 1 ? '' : 's'} from ${conn.images}/ (${downloaded} downloaded, ${entries.length - downloaded} cached)`;
+    if (skipped.length) msg += `. Not loaded: ${skipped.join(', ')}`;
+    notify(msg);
+  } catch (err) {
+    if (current()) notify(`Images were not loaded: ${err.message || 'GitHub request failed'}`);
+  }
+}
+
+// Removes cached images that no saved folder listing refers to any more.
+async function pruneImageCache() {
+  const listings = await imageDbRequest('folders', 'readonly', s => s.getAll());
+  const keys = await imageDbRequest('blobs', 'readonly', s => s.getAllKeys());
+  if (!Array.isArray(listings) || !Array.isArray(keys)) return;
+  const used = new Set(listings.flat().map(e => e.sha));
+  for (const key of keys) {
+    if (!used.has(key)) await imageDbRequest('blobs', 'readwrite', s => s.delete(key));
   }
 }
 
@@ -1503,6 +1719,7 @@ document.addEventListener('keydown', e => {
 source.value = load(STORE.draft) ?? sample;
 setBibliography(load(STORE.bib) ?? sampleBib);
 $('docName').textContent = docName;
+restoreGithub();
 setSyncScroll(syncScroll);
 renderFileList();
 renderRefList();
