@@ -21,3 +21,7 @@ This is an early prototype. It currently loads and saves one Markdown file at a 
 ## Run locally
 
 Open `dist/index.html` in a modern browser. The GitHub API requires a network connection; local editing and preview work without one.
+
+## Hosted version
+
+Each push to `main` that changes `dist/` publishes the app to GitHub Pages at <https://linsalrob.github.io/manumd/> via `.github/workflows/pages.yml`. The hosted page is the same static file: drafts, bibliography and tokens stay in your browser exactly as they do locally.
