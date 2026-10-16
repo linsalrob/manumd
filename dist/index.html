@@ -964,11 +964,10 @@ function githubDialog() {
   m.querySelector(github || githubToken ? '#ghToken' : '#ghRepo').focus();
 }
 
-// The draft no longer comes from a GitHub file. Repository and branch stay as
-// dialog defaults (saving to an unloaded path asks before replacing a file),
-// but the path and SHA are cleared and the source indicator is reset.
+// The draft no longer comes from a GitHub file: forget the connection
+// (the token, held separately, is kept) and reset the source indicator.
 function detachFromGithub() {
-  if (github) github = { ...github, sha: null, path: '' };
+  github = null;
   $('sourcePill').textContent = 'Local draft';
 }
 
