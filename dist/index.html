@@ -1125,6 +1125,23 @@ function setDocName(name) {
   renderFileList();
 }
 
+// A short fingerprint of a draft and its file name (53-bit cyrb53 hash).
+// Separate localStorage writes are not atomic, and another tab can save in
+// between, so the stored connection records the draft it was saved with and
+// is only restored when that draft is still the one in storage.
+function draftFingerprint(text, name) {
+  const str = `${name}\n${text}`;
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 2654435761);
+    h2 = Math.imul(h2 ^ c, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+
 // The draft, its file name and its GitHub connection are stored together,
 // name and connection only after the text, so a reload or a full browser
 // storage never pairs one file's name or GitHub SHA with another file's
@@ -1133,7 +1150,7 @@ function setDocName(name) {
 function saveDraft() {
   clearTimeout(saveTimer);
   const ok = store(STORE.draft, source.value) && store(STORE.docName, docName) &&
-    (github ? store(STORE.github, JSON.stringify(github)) : (unstore(STORE.github), true));
+    (github ? store(STORE.github, JSON.stringify({ ...github, draft: draftFingerprint(source.value, docName) })) : (unstore(STORE.github), true));
   if (!ok) unstore(STORE.github);
   setStorageStatus(ok);
   $('saveState').textContent = ok ? '· saved locally' : '· not saved locally';
@@ -1348,7 +1365,10 @@ function restoreGithub() {
   let conn = null;
   try { conn = JSON.parse(load(STORE.github)); } catch { /* ignore */ }
   const str = v => typeof v === 'string';
-  if (!conn || !str(conn.repo) || !str(conn.branch) || !str(conn.path) || load(STORE.draft) === null) { unstore(STORE.github); return; }
+  // Restore only alongside the exact draft and name it was saved with.
+  const draft = load(STORE.draft);
+  if (!conn || !str(conn.repo) || !str(conn.branch) || !str(conn.path) || draft === null ||
+      conn.draft !== draftFingerprint(draft, load(STORE.docName) || 'manuscript.md')) { unstore(STORE.github); return; }
   setGithub({ repo: conn.repo, branch: conn.branch, path: conn.path, sha: str(conn.sha) ? conn.sha : null, images: str(conn.images) ? conn.images : DEFAULT_IMAGES_FOLDER });
   restoreRepoImages(github);
 }
