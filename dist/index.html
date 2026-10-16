@@ -670,7 +670,7 @@ function stripComments(md) {
       const end = text.indexOf('\n', i);
       const line = end < 0 ? text.slice(i) : text.slice(i, end + 1);
       const bare = line.replace(/^[ \t]*(?:>[ \t]?)*/, '');
-      if (fence) { if (bare.trim().startsWith(fence)) fence = null; }
+      if (fence) { if ((fenceQuoted ? bare : line).trim().startsWith(fence)) fence = null; }
       else { fence = bare.match(/^(```+|~~~+)/)[1]; fenceQuoted = /^[ \t]*>/.test(line); }
       out += line;
       i += line.length;
