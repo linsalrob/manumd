@@ -2039,10 +2039,12 @@ previewPane.addEventListener('keydown', e => {
   // Only a block that is in view; nothing when the view shows none (for
   // example, inside the generated References list).
   const view = previewPane.getBoundingClientRect();
-  const block = [...preview.querySelectorAll('[data-line]')].find(el => {
+  const visible = [...preview.querySelectorAll('[data-line]')].filter(el => {
     const r = el.getBoundingClientRect();
     return r.bottom > view.top + 1 && r.top < view.bottom - 1;
   });
+  // A table spans its rows: prefer a visible row over the whole table.
+  const block = visible.find(el => !visible.some(other => other !== el && el.contains(other)));
   if (block) { e.preventDefault(); editBlock(block); }
 });
 preview.addEventListener('load', invalidateScrollMap, true); // images change heights
