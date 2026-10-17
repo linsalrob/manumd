@@ -153,6 +153,17 @@ a { color:#087eb5 }
   .status-left span:nth-child(n+2) { display:none }
 }
 .dialog-error { margin:4px 0 12px; padding:10px 12px; border:1px solid #ffbf47; border-left-width:4px; border-radius:8px; background:#fff8e8; color:#172433; font-size:13px; line-height:1.5 }
+.edit-hint { display:none; margin-left:6px; color:#03a9f4; letter-spacing:0; font-weight:600; text-transform:none }
+.layout.view-preview .edit-hint { display:inline }
+.layout.view-preview .preview { touch-action:manipulation }
+.preview-pane:focus-visible { outline:2px solid #03a9f4; outline-offset:-2px }
+.block-editor { margin:14px -12px; border:2px solid #03a9f4; border-radius:9px; background:#f7fbfd; overflow:hidden }
+.block-editor textarea { display:block; width:100%; min-height:3.5em; padding:10px 12px; border:0; resize:none; background:transparent; color:#172433; font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; overflow:hidden }
+.block-editor textarea:focus { outline:none }
+.block-editor-bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end; padding:7px 10px; border-top:1px solid #d8e1e8; background:#edf2f6; font:11px/1.4 system-ui,sans-serif; color:#6e8190 }
+.block-editor-bar span { flex:1 1 220px }
+li.block-editor-item { list-style:none }
+td .block-editor { margin:0 }
 </style>
 </head>
 <body>
@@ -209,8 +220,8 @@ a { color:#087eb5 }
         <div class="pane-label">Markdown source</div>
         <textarea id="source" class="source" spellcheck="true" data-gramm="true" data-gramm_editor="true" aria-label="Markdown source editor"></textarea>
       </section>
-      <section class="preview-pane">
-        <div class="pane-label">Live preview <span style="float:right;color:#98a6ae;letter-spacing:0;font-weight:500;text-transform:none">Common Markdown subset · Pandoc citations</span></div>
+      <section class="preview-pane" tabindex="0" aria-label="Preview. In Preview view, press Enter or double-click a block to edit it.">
+        <div class="pane-label">Live preview <span class="edit-hint">· double-click a block to edit it</span><span style="float:right;color:#98a6ae;letter-spacing:0;font-weight:500;text-transform:none">Common Markdown subset · Pandoc citations</span></div>
         <article id="preview" class="preview" aria-live="off"></article>
       </section>
     </div>
@@ -253,7 +264,8 @@ a { color:#087eb5 }
         <li>⌘/Ctrl + I — italic</li>
         <li>⌘/Ctrl + S — download the Markdown file</li>
         <li>⌘/Ctrl + Shift + C — citation picker</li>
-        <li>Double-click source or preview — align the other pane</li>
+        <li>Split view: double-click source or preview — align the other pane</li>
+        <li>Preview view: double-click a block, or press Enter, to edit its Markdown in place</li>
         <li>Esc — close a dialog</li>
       </ul>
     </div>
@@ -1053,8 +1065,116 @@ function setSyncScroll(on) {
 // ---------------------------------------------------------------------------
 // Preview, status bar, reference panel and file list
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Editing in the preview (issue #10). In Preview view, double-click a block,
+// or press Enter in the preview, to edit that block's Markdown in place. The
+// Markdown source stays the only copy of the document: applying the edit
+// replaces exactly the source lines the block was rendered from.
+// ---------------------------------------------------------------------------
+let blockEdit = null; // { start, end, original, box, ta }
+let previewDeferred = false; // a re-render waits until the edit is finished
+
+function previewEditable() {
+  return layout.classList.contains('view-preview');
+}
+
+// The source lines [start, end] a rendered block came from: up to the next
+// block, without trailing blank or comment-only lines.
+function blockSourceRange(block) {
+  const start = +block.dataset.line;
+  const stripped = stripComments(source.value).split('\n');
+  let next = stripped.length;
+  for (const el of preview.querySelectorAll('[data-line]')) {
+    const n = +el.dataset.line;
+    if (n > start && n < next) next = n;
+  }
+  let end = next - 1;
+  while (end > start && !stripped[end].trim()) end--;
+  return { start, end };
+}
+
+function lineOffset(text, line) {
+  let pos = 0;
+  for (let i = 0; i < line; i++) pos = text.indexOf('\n', pos) + 1;
+  return pos;
+}
+
+function editBlock(block) {
+  if (!block || blockEdit || !block.dataset.line) return;
+  const { start, end } = blockSourceRange(block);
+  const original = source.value.split('\n').slice(start, end + 1).join('\n');
+  const box = document.createElement('div');
+  box.className = 'block-editor';
+  box.innerHTML = `<textarea aria-label="Markdown for this block" spellcheck="true" data-gramm="true"></textarea>
+    <div class="block-editor-bar"><span>Markdown · ${end > start ? `lines ${start + 1}–${end + 1}` : `line ${start + 1}`} · Ctrl/⌘+Enter or click away to apply, Esc to cancel</span>
+    <button class="button small" data-act="cancel">Cancel</button><button class="button primary small" data-act="apply">Apply</button></div>`;
+  const ta = box.querySelector('textarea');
+  ta.value = original;
+  // A table row or list item is edited inside a row or item of its own.
+  let holder = box;
+  if (block.tagName === 'TR') {
+    holder = document.createElement('tr');
+    const cell = holder.appendChild(document.createElement('td'));
+    cell.colSpan = block.children.length || 1;
+    cell.appendChild(box);
+  } else if (block.tagName === 'LI') {
+    holder = document.createElement('li');
+    holder.className = 'block-editor-item';
+    holder.appendChild(box);
+  }
+  block.replaceWith(holder);
+  blockEdit = { start, end, original, box, ta };
+  const fit = () => { ta.style.height = 'auto'; ta.style.height = `${ta.scrollHeight + 2}px`; };
+  ta.addEventListener('input', fit);
+  fit();
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finishBlockEdit(false); }
+    else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); finishBlockEdit(true); }
+  });
+  box.querySelector('[data-act="apply"]').onclick = () => finishBlockEdit(true);
+  box.querySelector('[data-act="cancel"]').onclick = () => finishBlockEdit(false);
+  // Clicking or tabbing away applies the edit at once, before the next input
+  // is handled (e.g. Enter in the citation picker that took the focus).
+  box.addEventListener('focusout', e => {
+    if (blockEdit && blockEdit.box === box && (!e.relatedTarget || !box.contains(e.relatedTarget))) {
+      finishBlockEdit(true, !e.relatedTarget); // keep focus where it is going
+    }
+  });
+  ta.focus({ preventScroll: true });
+}
+
+function finishBlockEdit(apply, refocus = true) {
+  const edit = blockEdit;
+  if (!edit) return;
+  blockEdit = null;
+  const replacement = edit.ta.value.replace(/\r/g, '');
+  if (apply) {
+    const from = lineOffset(source.value, edit.start);
+    const after = from + edit.original.length;
+    if (source.value.slice(from, after) !== edit.original || (after < source.value.length && source.value[after] !== '\n')) {
+      notify('The Markdown changed while you were editing this block, so the edit was not applied');
+    } else {
+      if (replacement !== edit.original) {
+        source.setRangeText(replacement, from, after, 'preserve');
+        changed();
+      }
+      // Toolbar buttons and the citation picker act on the source caret: put
+      // it where the caret was in the block.
+      source.setSelectionRange(from + edit.ta.selectionStart, from + edit.ta.selectionEnd);
+    }
+  }
+  const hadFocus = edit.box.contains(document.activeElement);
+  const scroll = previewPane.scrollTop;
+  previewDeferred = false;
+  updatePreview();
+  previewPane.scrollTop = scroll;
+  // Return focus to the preview, unless it is moving on (e.g. into a dialog).
+  if (refocus && (hadFocus || document.activeElement === document.body)) previewPane.focus({ preventScroll: true });
+}
+
 function updatePreview() {
   renderQueued = false;
+  if (blockEdit) { previewDeferred = true; return; } // would remove the editor
   const cited = [];
   const text = stripComments(source.value);
   let html = renderMarkdown(text, cited);
@@ -1289,6 +1409,7 @@ function loadBibText(text, name, from = '') {
 }
 
 function downloadDraft() {
+  finishBlockEdit(true);
   const blob = new Blob([source.value], { type: 'text/markdown;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1878,6 +1999,7 @@ function pruneImageCache() {
 // Views and event wiring
 // ---------------------------------------------------------------------------
 function setView(view) {
+  finishBlockEdit(true); // an open block edit is applied before switching
   layout.classList.remove('view-split', 'view-edit', 'view-preview');
   layout.classList.add('view-' + view);
   invalidateLineTops();
@@ -1893,7 +2015,19 @@ source.addEventListener('input', () => changed());
 source.addEventListener('scroll', () => onPaneScroll(source));
 previewPane.addEventListener('scroll', () => onPaneScroll(previewPane));
 source.addEventListener('dblclick', alignPreviewToSource);
-preview.addEventListener('dblclick', e => alignSourceToPreview(e.target));
+preview.addEventListener('dblclick', e => {
+  if (e.target.closest('.block-editor')) return;
+  if (previewEditable()) editBlock(e.target.closest('[data-line]'));
+  else alignSourceToPreview(e.target);
+});
+// Keyboard: Enter in the preview edits the first block at the top of the view.
+previewPane.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !previewEditable() || blockEdit || e.target.closest('a, button, input, textarea')) return;
+  const top = previewPane.getBoundingClientRect().top;
+  const blocks = [...preview.querySelectorAll('[data-line]')];
+  const block = blocks.find(el => el.getBoundingClientRect().bottom > top + 1) || blocks[0];
+  if (block) { e.preventDefault(); editBlock(block); }
+});
 preview.addEventListener('load', invalidateScrollMap, true); // images change heights
 window.addEventListener('resize', invalidateLineTops);
 $('syncBtn').onclick = () => setSyncScroll(!syncScroll);
