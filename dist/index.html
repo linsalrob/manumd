@@ -94,8 +94,8 @@ a { color:#087eb5 }
 .quick-grid .button { font-size:11px; padding:7px 8px; text-align:left }
 .guide-list { padding-left:16px; margin:0; color:#718391; font-size:11px; line-height:1.8 }
 .privacy-note { padding:11px; background:#edf8f5; border-radius:8px; color:#3f7467; font-size:10px; line-height:1.5 }
-.modal-backdrop { position:fixed; inset:0; background:#102e3db0; z-index:10; display:grid; place-items:center; padding:20px }
-.modal { background:white; border-radius:14px; width:min(540px,100%); padding:21px; box-shadow:0 24px 80px #102e3d50 }
+.modal-backdrop { position:fixed; inset:0; background:#102e3db0; z-index:10; display:grid; overflow-y:auto; overscroll-behavior:contain; padding:20px }
+.modal { background:white; border-radius:14px; width:min(540px,100%); margin:auto; padding:21px; box-shadow:0 24px 80px #102e3d50 }
 .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px }
 .modal-head h2 { font-size:17px; margin:0; color:var(--navy) }
 .close { border:0; background:transparent; font-size:21px; color:#728492 }
@@ -228,7 +228,7 @@ a { color:#087eb5 }
     <h2 class="panel-title">References <span class="ref-count" id="refCount">0</span></h2>
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between"><strong style="font-size:12px;color:#354e5d">Paperpile library</strong><button id="bibBtn2" class="button small">Import .bib</button></div>
-      <p>Sync a BibTeX file from Paperpile, then cite by key as you write.</p>
+      <p>Sync a BibTeX file from Paperpile, then cite by key as you write. A <code>references.bib</code> next to a manuscript on GitHub is loaded with it.</p>
       <div id="refsBox" class="refs-empty" style="margin-top:10px"></div>
     </div>
     <div class="card">
@@ -337,7 +337,7 @@ let bibName = load(STORE.bibName) || 'references.bib';
 let docName = load(STORE.docName) || 'manuscript.md';
 let saveTimer = null;
 let renderQueued = false;
-let mdReadId = 0, bibReadId = 0; // latest local file reads
+let mdReadId = 0, bibReadId = 0; // latest file reads (a newer one wins)
 
 // ---------------------------------------------------------------------------
 // HTML helpers. All user-authored text is escaped before it reaches innerHTML.
@@ -1275,14 +1275,14 @@ function insertCitation(key) {
 // ---------------------------------------------------------------------------
 // Files: Markdown, BibTeX and images
 // ---------------------------------------------------------------------------
-function loadBibText(text, name) {
+function loadBibText(text, name, from = '') {
   setBibliography(text);
   bibName = name;
   const ok = store(STORE.bib, text) && store(STORE.bibName, name);
   renderRefList();
   renderFileList();
   updatePreview();
-  let msg = `Loaded ${library.byKey.size} references`;
+  let msg = `Loaded ${library.byKey.size} references${from ? ` from ${from}` : ''}`;
   if (library.duplicates) msg += ` (${library.duplicates} duplicate key${library.duplicates === 1 ? '' : 's'} ignored)`;
   if (!ok) msg += '. The library is too large to keep in browser storage; re-import it next session.';
   notify(msg);
@@ -1323,6 +1323,7 @@ function githubDialog() {
     <div class="field"><label for="ghBranch">Branch</label><input id="ghBranch" placeholder="main" autocomplete="off"></div>
     <div class="field"><label for="ghPath">Markdown file path</label><input id="ghPath" placeholder="manuscript.md" autocomplete="off"></div>
     <div class="field"><label for="ghImages">Images folder</label><input id="ghImages" placeholder="images" autocomplete="off"><small>Relative to the Markdown file. Images in this folder are downloaded when you load the file and cached in this browser; later loads only download images that have changed. Leave empty to skip images.</small></div>
+    <div class="field"><label for="ghBib">BibTeX file</label><input id="ghBib" placeholder="references.bib" autocomplete="off"><small>Relative to the Markdown file, and loaded with it to format citations and build the reference list. If the Markdown's YAML front matter names a <code>bibliography</code>, as Pandoc uses, that file is loaded instead. Leave empty to keep the bibliography you imported. ManuMD never commits it.</small></div>
     <div class="field"><label for="ghToken">GitHub token</label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…"><small>For public files, a token is optional for reading. Saving a commit requires write access. Only the Markdown file is committed — image files are not uploaded.</small></div>
     <p class="dialog-error hidden" id="ghError" role="alert"></p>
     <div class="modal-actions"><button class="button" id="ghForget">Forget token</button><button class="button" id="ghCancel">Cancel</button><button class="button primary" id="ghLoad">Load file</button><button class="button" id="ghSave">Save commit</button></div>`);
@@ -1330,6 +1331,7 @@ function githubDialog() {
   m.querySelector('#ghBranch').value = github ? github.branch : 'main';
   m.querySelector('#ghPath').value = github ? github.path : '';
   m.querySelector('#ghImages').value = github ? github.images : DEFAULT_IMAGES_FOLDER;
+  m.querySelector('#ghBib').value = github ? github.bib : DEFAULT_BIBLIOGRAPHY;
   m.querySelector('#ghToken').value = githubToken;
   m.querySelector('#ghForget').classList.toggle('hidden', !githubToken);
   m.querySelector('#ghForget').onclick = () => {
@@ -1346,6 +1348,72 @@ function githubDialog() {
 }
 
 const DEFAULT_IMAGES_FOLDER = 'images';
+const DEFAULT_BIBLIOGRAPHY = 'references.bib';
+let bibSync = Promise.resolve(); // the latest bibliography load, for tests
+
+// The bibliography named in YAML front matter (Pandoc's `bibliography:`
+// field), as a string or the first item of a list; null if there is none.
+function frontMatterBibliography(md) {
+  const fm = md.replace(/\r/g, '').match(/^---\n([\s\S]*?)\n(?:---|\.\.\.)[ \t]*(?:\n|$)/);
+  if (!fm) return null;
+  const field = fm[1].match(/^bibliography:[ \t]*(.*)$/m);
+  if (!field) return null;
+  let value = field[1].trim();
+  if (!value) {
+    const item = fm[1].slice(field.index + field[0].length).match(/^\n[ \t]+-[ \t]*(.+)/);
+    value = item ? item[1].trim() : '';
+  } else if (value.startsWith('[')) {
+    value = value.slice(1).replace(/\]$/, '').split(',')[0].trim();
+  }
+  return value.replace(/^(["'])(.*)\1$/, '$2').trim() || null;
+}
+
+// Resolves a relative path against a folder of the repository; null if it
+// is absolute, a URL, or leaves the repository.
+function repoPath(dir, rel) {
+  if (/^[a-z][a-z0-9+.-]*:|^[\/~]/i.test(rel)) return null;
+  const parts = dir ? dir.split('/') : [];
+  for (const part of rel.split('/')) {
+    if (!part || part === '.') continue;
+    if (part === '..') {
+      if (!parts.length) return null;
+      parts.pop();
+    } else {
+      parts.push(part);
+    }
+  }
+  return parts.length ? parts.join('/') : null;
+}
+
+// Loads the manuscript's bibliography from the repository: the file named in
+// the front matter, else the BibTeX file set in the dialog. It replaces the
+// imported bibliography, unless a .bib file is imported meanwhile.
+async function loadGithubBibliography(conn, headers, markdown) {
+  const named = frontMatterBibliography(markdown);
+  const rel = named || conn.bib;
+  if (!rel) return;
+  const file = conn.path.split('/').pop();
+  const path = repoPath(conn.path.split('/').slice(0, -1).join('/'), rel);
+  if (!path) { notify(`The bibliography ${rel} named in ${file} is outside the repository, so it was not loaded`); return; }
+  const readId = ++bibReadId;
+  // Still the latest bibliography read, and the draft still comes from that
+  // file (a commit replaces the connection object but not the file).
+  const current = () => readId === bibReadId && !!github && github.repo === conn.repo && github.branch === conn.branch && github.path === conn.path;
+  try {
+    const url = `https://api.github.com/repos/${conn.repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(conn.branch)}`;
+    const resp = await fetch(url, { headers: { ...headers, Accept: 'application/vnd.github.raw+json' } });
+    if (!current()) return;
+    if (resp.status === 404) {
+      notify(named ? `${file} names the bibliography ${rel}, but it is not in the repository` : `No ${rel} next to ${file}. Import your .bib file to format citations.`);
+      return;
+    }
+    if (!resp.ok) throw Error(githubError(resp.status, await resp.json().catch(() => ({})), { repo: conn.repo, branch: conn.branch, write: false, hasToken: !!headers.Authorization }));
+    const text = await resp.text();
+    if (current()) loadBibText(text, path.split('/').pop(), `${path} on GitHub`);
+  } catch (err) {
+    if (current()) notify(`The bibliography was not loaded: ${err.message || 'GitHub request failed'}`);
+  }
+}
 
 // Records the GitHub file the draft belongs to. saveDraft() stores it with
 // the draft (the token is not part of it).
@@ -1374,7 +1442,7 @@ function restoreGithub() {
   // connection, and this tab's next save replaces it anyway.
   if (!conn || !str(conn.repo) || !str(conn.branch) || !str(conn.path) ||
       conn.draft !== draftFingerprint(source.value, docName)) return;
-  setGithub({ repo: conn.repo, branch: conn.branch, path: conn.path, sha: str(conn.sha) ? conn.sha : null, images: str(conn.images) ? conn.images : DEFAULT_IMAGES_FOLDER, imagesTree: str(conn.imagesTree) ? conn.imagesTree : null });
+  setGithub({ repo: conn.repo, branch: conn.branch, path: conn.path, sha: str(conn.sha) ? conn.sha : null, images: str(conn.images) ? conn.images : DEFAULT_IMAGES_FOLDER, bib: str(conn.bib) ? conn.bib : DEFAULT_BIBLIOGRAPHY, imagesTree: str(conn.imagesTree) ? conn.imagesTree : null });
   restoreRepoImages(github);
 }
 
@@ -1416,10 +1484,12 @@ async function githubFile(m, save) {
   const branch = m.querySelector('#ghBranch').value.trim() || 'main';
   const path = m.querySelector('#ghPath').value.trim().replace(/^\/+/, '');
   const imagesFolder = m.querySelector('#ghImages').value.trim().replace(/^\.\/|^\/+|\/+$/g, '');
+  const bibFile = m.querySelector('#ghBib').value.trim();
   const token = m.querySelector('#ghToken').value.trim();
   if (!/^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/.test(repo) || /(^|\/)\.\.?$/.test(repo)) { notify('Enter the repository as owner/repository'); return; }
   if (!path || path.split('/').some(p => !p || p === '.' || p === '..')) { notify('Enter the path of a file in the repository, e.g. paper/manuscript.md'); return; }
   if (imagesFolder && imagesFolder.split('/').some(p => !p || p === '.' || p === '..')) { notify('Enter the images folder relative to the Markdown file, e.g. images'); return; }
+  if (bibFile && !repoPath(path.split('/').slice(0, -1).join('/'), bibFile)) { notify('Enter the BibTeX file relative to the Markdown file, e.g. references.bib'); return; }
 
   githubToken = token;
   storeToken(token);
@@ -1460,7 +1530,7 @@ async function githubFile(m, save) {
       }
       if (!resp.ok) throw Error(githubError(resp.status, data, { repo, branch, write: true, hasToken: true }));
       const previous = github;
-      const conn = { repo, branch, path, sha: data.content && data.content.sha, images: imagesFolder, imagesTree: null };
+      const conn = { repo, branch, path, sha: data.content && data.content.sha, images: imagesFolder, bib: bibFile, imagesTree: null };
       if (previous && imageFolderKey(previous) === imageFolderKey(conn)) conn.imagesTree = previous.imagesTree;
       setGithub(conn);
       saveDraft();
@@ -1488,7 +1558,7 @@ async function githubFile(m, save) {
         if (!raw.ok) throw Error(await explain(raw, false));
         text = await raw.text();
       }
-      setGithub({ repo, branch, path, sha: d.sha, images: imagesFolder, imagesTree: null });
+      setGithub({ repo, branch, path, sha: d.sha, images: imagesFolder, bib: bibFile, imagesTree: null });
       source.value = text;
       setDocName(path.split('/').pop());
       setRepoImages([]);
@@ -1497,6 +1567,7 @@ async function githubFile(m, save) {
       $('saveState').textContent = '· loaded from GitHub';
       notify('Markdown loaded from GitHub');
       imageSync = syncGithubImages(github, headers);
+      bibSync = loadGithubBibliography(github, headers, text);
     }
   } catch (err) {
     // The dialog stays open on failure and the explanation stays in it,
@@ -1688,8 +1759,8 @@ async function syncGithubImages(conn, headers) {
       if (!current()) return;
       github.imagesTree = null;
       saveDraft(true);
-      notify(`No ${conn.images}/ folder next to ${conn.path.split('/').pop()}, so no images were loaded`);
-      return;
+      return; // most manuscripts have no images folder: nothing to report
+
     }
     if (!resp.ok) throw Error(githubError(resp.status, await resp.json().catch(() => ({})), { repo: conn.repo, branch: conn.branch, write: false, hasToken: !!headers.Authorization }));
     const tree = await resp.json();
