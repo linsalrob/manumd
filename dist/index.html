@@ -94,8 +94,8 @@ a { color:#087eb5 }
 .quick-grid .button { font-size:11px; padding:7px 8px; text-align:left }
 .guide-list { padding-left:16px; margin:0; color:#718391; font-size:11px; line-height:1.8 }
 .privacy-note { padding:11px; background:#edf8f5; border-radius:8px; color:#3f7467; font-size:10px; line-height:1.5 }
-.modal-backdrop { position:fixed; inset:0; background:#102e3db0; z-index:10; display:grid; place-items:center; padding:20px }
-.modal { background:white; border-radius:14px; width:min(540px,100%); padding:21px; box-shadow:0 24px 80px #102e3d50 }
+.modal-backdrop { position:fixed; inset:0; background:#102e3db0; z-index:10; display:grid; overflow-y:auto; overscroll-behavior:contain; padding:20px }
+.modal { background:white; border-radius:14px; width:min(540px,100%); margin:auto; padding:21px; box-shadow:0 24px 80px #102e3d50 }
 .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px }
 .modal-head h2 { font-size:17px; margin:0; color:var(--navy) }
 .close { border:0; background:transparent; font-size:21px; color:#728492 }
@@ -111,7 +111,7 @@ a { color:#087eb5 }
 .cite-result:hover { background:#f4fafc }
 .cite-result strong { display:block; color:#2d495b; font-size:12px }
 .cite-result small { display:block; color:#81919d; font-size:10px; margin-top:3px }
-.notice { position:fixed; bottom:48px; left:50%; transform:translateX(-50%); padding:9px 14px; background:#173e51; color:white; border-radius:8px; box-shadow:var(--shadow); font-size:12px; z-index:20 }
+.notice { position:fixed; bottom:48px; left:50%; transform:translateX(-50%); max-width:min(560px, calc(100vw - 32px)); padding:9px 14px; background:#173e51; color:white; border-radius:8px; box-shadow:var(--shadow); font-size:12px; z-index:20 }
 .hidden { display:none!important }
 .layout.view-edit .editor-split, .layout.view-preview .editor-split { grid-template-columns:1fr }
 .layout.view-edit .preview-pane { display:none }
@@ -152,6 +152,7 @@ a { color:#087eb5 }
   .sync-toggle { display:none }
   .status-left span:nth-child(n+2) { display:none }
 }
+.dialog-error { margin:4px 0 12px; padding:10px 12px; border:1px solid #ffbf47; border-left-width:4px; border-radius:8px; background:#fff8e8; color:#172433; font-size:13px; line-height:1.5 }
 </style>
 </head>
 <body>
@@ -227,7 +228,7 @@ a { color:#087eb5 }
     <h2 class="panel-title">References <span class="ref-count" id="refCount">0</span></h2>
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between"><strong style="font-size:12px;color:#354e5d">Paperpile library</strong><button id="bibBtn2" class="button small">Import .bib</button></div>
-      <p>Sync a BibTeX file from Paperpile, then cite by key as you write.</p>
+      <p>Sync a BibTeX file from Paperpile, then cite by key as you write. A <code>references.bib</code> next to a manuscript on GitHub is loaded with it.</p>
       <div id="refsBox" class="refs-empty" style="margin-top:10px"></div>
     </div>
     <div class="card">
@@ -336,7 +337,7 @@ let bibName = load(STORE.bibName) || 'references.bib';
 let docName = load(STORE.docName) || 'manuscript.md';
 let saveTimer = null;
 let renderQueued = false;
-let mdReadId = 0, bibReadId = 0; // latest local file reads
+let mdReadId = 0, bibReadId = 0; // latest file reads (a newer one wins)
 
 // ---------------------------------------------------------------------------
 // HTML helpers. All user-authored text is escaped before it reaches innerHTML.
@@ -1274,14 +1275,14 @@ function insertCitation(key) {
 // ---------------------------------------------------------------------------
 // Files: Markdown, BibTeX and images
 // ---------------------------------------------------------------------------
-function loadBibText(text, name) {
+function loadBibText(text, name, from = '') {
   setBibliography(text);
   bibName = name;
   const ok = store(STORE.bib, text) && store(STORE.bibName, name);
   renderRefList();
   renderFileList();
   updatePreview();
-  let msg = `Loaded ${library.byKey.size} references`;
+  let msg = `Loaded ${library.byKey.size} references${from ? ` from ${from}` : ''}`;
   if (library.duplicates) msg += ` (${library.duplicates} duplicate key${library.duplicates === 1 ? '' : 's'} ignored)`;
   if (!ok) msg += '. The library is too large to keep in browser storage; re-import it next session.';
   notify(msg);
@@ -1322,12 +1323,15 @@ function githubDialog() {
     <div class="field"><label for="ghBranch">Branch</label><input id="ghBranch" placeholder="main" autocomplete="off"></div>
     <div class="field"><label for="ghPath">Markdown file path</label><input id="ghPath" placeholder="manuscript.md" autocomplete="off"></div>
     <div class="field"><label for="ghImages">Images folder</label><input id="ghImages" placeholder="images" autocomplete="off"><small>Relative to the Markdown file. Images in this folder are downloaded when you load the file and cached in this browser; later loads only download images that have changed. Leave empty to skip images.</small></div>
+    <div class="field"><label for="ghBib">BibTeX file</label><input id="ghBib" placeholder="references.bib" autocomplete="off"><small>Relative to the Markdown file, and loaded with it to format citations and build the reference list. If the Markdown's YAML front matter names a <code>bibliography</code>, as Pandoc uses, that file is loaded instead. Leave empty to keep the bibliography you imported. ManuMD never commits it.</small></div>
     <div class="field"><label for="ghToken">GitHub token</label><input id="ghToken" type="password" autocomplete="off" placeholder="github_pat_…"><small>For public files, a token is optional for reading. Saving a commit requires write access. Only the Markdown file is committed — image files are not uploaded.</small></div>
+    <p class="dialog-error hidden" id="ghError" role="alert"></p>
     <div class="modal-actions"><button class="button" id="ghForget">Forget token</button><button class="button" id="ghCancel">Cancel</button><button class="button primary" id="ghLoad">Load file</button><button class="button" id="ghSave">Save commit</button></div>`);
   m.querySelector('#ghRepo').value = github ? github.repo : '';
   m.querySelector('#ghBranch').value = github ? github.branch : 'main';
   m.querySelector('#ghPath').value = github ? github.path : '';
   m.querySelector('#ghImages').value = github ? github.images : DEFAULT_IMAGES_FOLDER;
+  m.querySelector('#ghBib').value = github ? github.bib : DEFAULT_BIBLIOGRAPHY;
   m.querySelector('#ghToken').value = githubToken;
   m.querySelector('#ghForget').classList.toggle('hidden', !githubToken);
   m.querySelector('#ghForget').onclick = () => {
@@ -1344,6 +1348,87 @@ function githubDialog() {
 }
 
 const DEFAULT_IMAGES_FOLDER = 'images';
+const DEFAULT_BIBLIOGRAPHY = 'references.bib';
+let bibSync = Promise.resolve(); // the latest bibliography load, for tests
+
+// A YAML scalar as written on one line: a quoted string up to its closing
+// quote, or a plain value without its " # comment".
+function yamlScalar(raw) {
+  const t = raw.trim();
+  const quoted = t.match(/^"((?:[^"\\]|\\.)*)"|^'((?:[^']|'')*)'/);
+  if (quoted) return quoted[1] !== undefined ? quoted[1].replace(/\\(.)/g, '$1') : quoted[2].replace(/''/g, "'");
+  return t.replace(/(^|[ \t])#.*$/, '').trim();
+}
+
+// The bibliography named in YAML front matter (Pandoc's `bibliography:`
+// field), as a string or the first item of a list; null if there is none.
+function frontMatterBibliography(md) {
+  const fm = md.replace(/\r/g, '').match(/^---\n([\s\S]*?)\n(?:---|\.\.\.)[ \t]*(?:\n|$)/);
+  if (!fm) return null;
+  const field = fm[1].match(/^bibliography:[ \t]*(.*)$/m);
+  if (!field) return null;
+  let value = field[1].trim();
+  if (value.startsWith('[')) {
+    const inner = value.slice(1).trim(); // flow list: its first item
+    value = yamlScalar(/^["']/.test(inner) ? inner : inner.split(/[,\]]/)[0]);
+  } else {
+    value = yamlScalar(value);
+  }
+  if (!value) {
+    // Block list on the following lines; the field may end in a comment.
+    const item = fm[1].slice(field.index + field[0].length).match(/^\n[ \t]+-[ \t]*(.+)/);
+    value = item ? yamlScalar(item[1]) : '';
+  }
+  return value || null;
+}
+
+// Resolves a relative path against a folder of the repository; null if it
+// is absolute, a URL, or leaves the repository.
+function repoPath(dir, rel) {
+  if (/^[a-z][a-z0-9+.-]*:|^[\/~]/i.test(rel)) return null;
+  const parts = dir ? dir.split('/') : [];
+  for (const part of rel.split('/')) {
+    if (!part || part === '.') continue;
+    if (part === '..') {
+      if (!parts.length) return null;
+      parts.pop();
+    } else {
+      parts.push(part);
+    }
+  }
+  return parts.length ? parts.join('/') : null;
+}
+
+// Loads the manuscript's bibliography from the repository: the file named in
+// the front matter, else the BibTeX file set in the dialog. It replaces the
+// imported bibliography, unless a .bib file is imported meanwhile.
+async function loadGithubBibliography(conn, headers, markdown) {
+  // Every load, even one that loads nothing, supersedes earlier reads.
+  const readId = ++bibReadId;
+  const named = frontMatterBibliography(markdown);
+  const rel = named || conn.bib;
+  if (!rel) return;
+  const file = conn.path.split('/').pop();
+  const path = repoPath(conn.path.split('/').slice(0, -1).join('/'), rel);
+  if (!path) { notify(`The bibliography ${rel} named in ${file} is outside the repository, so it was not loaded`); return; }
+  // Still the latest bibliography read, and the draft still comes from that
+  // file (a commit replaces the connection object but not the file).
+  const current = () => readId === bibReadId && !!github && github.repo === conn.repo && github.branch === conn.branch && github.path === conn.path;
+  try {
+    const url = `https://api.github.com/repos/${conn.repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(conn.branch)}`;
+    const resp = await fetch(url, { headers: { ...headers, Accept: 'application/vnd.github.raw+json' } });
+    if (!current()) return;
+    if (resp.status === 404) {
+      notify(named ? `${file} names the bibliography ${rel}, but it is not in the repository` : `No ${rel} next to ${file}. Import your .bib file to format citations.`);
+      return;
+    }
+    if (!resp.ok) throw Error(githubError(resp.status, await resp.json().catch(() => ({})), { repo: conn.repo, branch: conn.branch, write: false, hasToken: !!headers.Authorization }));
+    const text = await resp.text();
+    if (current()) loadBibText(text, path.split('/').pop(), `${path} on GitHub`);
+  } catch (err) {
+    if (current()) notify(`The bibliography was not loaded: ${err.message || 'GitHub request failed'}`);
+  }
+}
 
 // Records the GitHub file the draft belongs to. saveDraft() stores it with
 // the draft (the token is not part of it).
@@ -1372,7 +1457,7 @@ function restoreGithub() {
   // connection, and this tab's next save replaces it anyway.
   if (!conn || !str(conn.repo) || !str(conn.branch) || !str(conn.path) ||
       conn.draft !== draftFingerprint(source.value, docName)) return;
-  setGithub({ repo: conn.repo, branch: conn.branch, path: conn.path, sha: str(conn.sha) ? conn.sha : null, images: str(conn.images) ? conn.images : DEFAULT_IMAGES_FOLDER, imagesTree: str(conn.imagesTree) ? conn.imagesTree : null });
+  setGithub({ repo: conn.repo, branch: conn.branch, path: conn.path, sha: str(conn.sha) ? conn.sha : null, images: str(conn.images) ? conn.images : DEFAULT_IMAGES_FOLDER, bib: str(conn.bib) ? conn.bib : DEFAULT_BIBLIOGRAPHY, imagesTree: str(conn.imagesTree) ? conn.imagesTree : null });
   restoreRepoImages(github);
 }
 
@@ -1388,15 +1473,38 @@ function encodeBase64Utf8(text) {
   return btoa(binary);
 }
 
+// Explains a failed GitHub request in terms of what the user can change.
+// GitHub's own wording ("Resource not accessible by personal access token")
+// does not say which setting is missing. `repo` is the repository named in
+// the dialog; `write` is true for a commit.
+function githubError(status, body, { repo, branch, write, hasToken }) {
+  const said = (body && body.message) || '';
+  const contents = write ? 'Read and write' : 'Read-only (or Read and write)';
+  const tokenSettings = `In the token's settings on GitHub, check that Repository access includes ${repo} and that the Contents permission is ${contents}.`;
+  if (/rate limit/i.test(said)) return `GitHub's rate limit was reached. Wait a few minutes and try again${hasToken ? '' : ', or enter a token'}.`;
+  if (/SAML|single sign-on/i.test(said)) return `The organisation that owns ${repo} uses single sign-on. On GitHub's token page, choose Configure SSO and authorise the token for that organisation.`;
+  if (/protected branch/i.test(said)) return `${branch} is a protected branch, so GitHub refused a direct commit (${said}). Commit to another branch and open a pull request, or ask a repository admin.`;
+  if (status === 401) return 'GitHub did not accept the token. It may have expired, been revoked or been mistyped.';
+  if (status === 403) {
+    return `Your token cannot ${write ? 'write to' : 'read'} ${repo}. ${tokenSettings} If the repository belongs to an organisation, the token's resource owner must be that organisation, and the organisation may need to approve the token.`;
+  }
+  if (status === 404) {
+    return `Not found: check the repository (${repo}), branch (${branch}) and path. GitHub also reports a private repository as not found when ${hasToken ? `the token cannot see it. ${tokenSettings}` : 'no token is given.'}`;
+  }
+  return `${write ? 'GitHub rejected the commit' : 'GitHub request failed'} (${status}${said ? `: ${said}` : ''}).`;
+}
+
 async function githubFile(m, save) {
   const repo = m.querySelector('#ghRepo').value.trim().replace(/^https:\/\/github\.com\//, '').replace(/\.git$/, '').replace(/\/$/, '');
   const branch = m.querySelector('#ghBranch').value.trim() || 'main';
   const path = m.querySelector('#ghPath').value.trim().replace(/^\/+/, '');
   const imagesFolder = m.querySelector('#ghImages').value.trim().replace(/^\.\/|^\/+|\/+$/g, '');
+  const bibFile = m.querySelector('#ghBib').value.trim();
   const token = m.querySelector('#ghToken').value.trim();
   if (!/^[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/.test(repo) || /(^|\/)\.\.?$/.test(repo)) { notify('Enter the repository as owner/repository'); return; }
   if (!path || path.split('/').some(p => !p || p === '.' || p === '..')) { notify('Enter the path of a file in the repository, e.g. paper/manuscript.md'); return; }
   if (imagesFolder && imagesFolder.split('/').some(p => !p || p === '.' || p === '..')) { notify('Enter the images folder relative to the Markdown file, e.g. images'); return; }
+  if (bibFile && !repoPath(path.split('/').slice(0, -1).join('/'), bibFile)) { notify('Enter the BibTeX file relative to the Markdown file, e.g. references.bib'); return; }
 
   githubToken = token;
   storeToken(token);
@@ -1404,6 +1512,9 @@ async function githubFile(m, save) {
   const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
   if (token) headers.Authorization = 'Bearer ' + token;
   const fileUrl = `https://api.github.com/repos/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const explain = async (resp, write) => githubError(resp.status, await resp.json().catch(() => ({})), { repo, branch, write, hasToken: !!token });
+  const errorBox = m.querySelector('#ghError');
+  errorBox.classList.add('hidden');
   const buttons = m.querySelectorAll('.modal-actions button');
   buttons.forEach(b => b.disabled = true);
   m.querySelector('.close').disabled = true;
@@ -1421,7 +1532,7 @@ async function githubFile(m, save) {
           sha = (await existing.json()).sha;
           if (!confirm(`${path} already exists on ${branch}. Replace its contents with this draft?`)) return;
         } else if (existing.status !== 404) {
-          throw Error(`Could not check the existing file (${existing.status}). Check the repository, branch, path and token.`);
+          throw Error(`Could not check whether ${path} exists. ${await explain(existing, false)}`);
         }
       }
       const message = prompt('Commit message', `Edit ${path} with ManuMD`);
@@ -1432,9 +1543,9 @@ async function githubFile(m, save) {
       if (resp.status === 409 || (resp.status === 422 && /sha/i.test(data.message || ''))) {
         throw Error('The file changed on GitHub since you loaded it. Download your draft, then load the file again and reapply your edits.');
       }
-      if (!resp.ok) throw Error(data.message ? `GitHub rejected the commit: ${data.message}` : `GitHub rejected the commit (${resp.status}).`);
+      if (!resp.ok) throw Error(githubError(resp.status, data, { repo, branch, write: true, hasToken: true }));
       const previous = github;
-      const conn = { repo, branch, path, sha: data.content && data.content.sha, images: imagesFolder, imagesTree: null };
+      const conn = { repo, branch, path, sha: data.content && data.content.sha, images: imagesFolder, bib: bibFile, imagesTree: null };
       if (previous && imageFolderKey(previous) === imageFolderKey(conn)) conn.imagesTree = previous.imagesTree;
       setGithub(conn);
       saveDraft();
@@ -1450,7 +1561,7 @@ async function githubFile(m, save) {
     } else {
       if (!confirmReplaceDraft()) return;
       const resp = await fetch(`${fileUrl}?ref=${encodeURIComponent(branch)}`, { headers });
-      if (!resp.ok) throw Error(resp.status === 404 ? 'File not found. Check the repository, branch and path (private repositories need a token).' : `GitHub request failed (${resp.status}).`);
+      if (!resp.ok) throw Error(await explain(resp, false));
       const d = await resp.json();
       if (d.type !== 'file') throw Error('That path is not a file.');
       let text;
@@ -1459,10 +1570,10 @@ async function githubFile(m, save) {
       } else {
         // Files over 1 MB are returned without inline content.
         const raw = await fetch(`${fileUrl}?ref=${encodeURIComponent(branch)}`, { headers: { ...headers, Accept: 'application/vnd.github.raw+json' } });
-        if (!raw.ok) throw Error(`GitHub request failed (${raw.status}).`);
+        if (!raw.ok) throw Error(await explain(raw, false));
         text = await raw.text();
       }
-      setGithub({ repo, branch, path, sha: d.sha, images: imagesFolder, imagesTree: null });
+      setGithub({ repo, branch, path, sha: d.sha, images: imagesFolder, bib: bibFile, imagesTree: null });
       source.value = text;
       setDocName(path.split('/').pop());
       setRepoImages([]);
@@ -1471,9 +1582,18 @@ async function githubFile(m, save) {
       $('saveState').textContent = '· loaded from GitHub';
       notify('Markdown loaded from GitHub');
       imageSync = syncGithubImages(github, headers);
+      bibSync = loadGithubBibliography(github, headers, text);
     }
   } catch (err) {
-    notify(err.message || 'GitHub request failed');
+    // The dialog stays open on failure and the explanation stays in it,
+    // rather than in a notice that would cover it and then disappear.
+    if (document.contains(m)) {
+      errorBox.textContent = err.message || 'GitHub request failed';
+      errorBox.classList.remove('hidden');
+      if (errorBox.scrollIntoView) errorBox.scrollIntoView({ block: 'nearest' });
+    } else {
+      notify(err.message || 'GitHub request failed');
+    }
   } finally {
     modalBusy = false;
     buttons.forEach(b => b.disabled = false);
@@ -1654,10 +1774,10 @@ async function syncGithubImages(conn, headers) {
       if (!current()) return;
       github.imagesTree = null;
       saveDraft(true);
-      notify(`No ${conn.images}/ folder next to ${conn.path.split('/').pop()}, so no images were loaded`);
-      return;
+      return; // most manuscripts have no images folder: nothing to report
+
     }
-    if (!resp.ok) throw Error(`GitHub request failed (${resp.status})`);
+    if (!resp.ok) throw Error(githubError(resp.status, await resp.json().catch(() => ({})), { repo: conn.repo, branch: conn.branch, write: false, hasToken: !!headers.Authorization }));
     const tree = await resp.json();
     if (!Array.isArray(tree.tree) || typeof tree.sha !== 'string') throw Error(`${folder} is not a folder`);
     // A partial listing must not replace the saved one or prune the cache.
