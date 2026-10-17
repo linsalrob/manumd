@@ -795,7 +795,9 @@ function renderMarkdown(md, cited, top = true) {
         flushAll();
         const closeAt = lines[close].indexOf('$$');
         const body = [line.replace(/^\s*\$\$/, ''), ...lines.slice(i + 1, close), lines[close].slice(0, closeAt)].join('\n');
-        html += `<div class="math-block"${at(i)}>${mathHtml(body, true)}</div>`;
+        // data-end marks the closing line, which text after $$ may share
+        // with the next paragraph (see blockSourceRange).
+        html += `<div class="math-block"${at(i)}${top ? ` data-end="${close}"` : ''}>${mathHtml(body, true)}</div>`;
         // Text after the closing $$ on the same line starts the next paragraph.
         const rest = lines[close].slice(closeAt + 2).trim();
         if (rest) { para = [rest]; paraLine = close; }
@@ -1079,17 +1081,27 @@ function previewEditable() {
 }
 
 // The source lines [start, end] a rendered block came from: up to the next
-// block, without trailing blank or comment-only lines.
+// block, without trailing blank or comment-only lines. An equation whose
+// closing $$ line also starts a paragraph ("$$ more text") shares that line
+// with it, so the two are edited together and neither edit can split it.
 function blockSourceRange(block) {
-  const start = +block.dataset.line;
+  const blocks = [...preview.querySelectorAll('[data-line]')];
+  let start = +block.dataset.line;
+  for (const el of blocks) {
+    if (el.dataset.end && +el.dataset.line < start && +el.dataset.end >= start) start = +el.dataset.line;
+  }
+  let last = +block.dataset.line; // the block must end at or after this line
+  for (const el of blocks) {
+    if (+el.dataset.line === start && el.dataset.end) last = Math.max(last, +el.dataset.end);
+  }
   const stripped = stripComments(source.value).split('\n');
   let next = stripped.length;
-  for (const el of preview.querySelectorAll('[data-line]')) {
+  for (const el of blocks) {
     const n = +el.dataset.line;
-    if (n > start && n < next) next = n;
+    if (n > last && n < next) next = n;
   }
   let end = next - 1;
-  while (end > start && !stripped[end].trim()) end--;
+  while (end > last && !stripped[end].trim()) end--;
   return { start, end };
 }
 
@@ -1123,6 +1135,7 @@ function editBlock(block) {
     holder.appendChild(box);
   }
   block.replaceWith(holder);
+  if (box.scrollIntoView) box.scrollIntoView({ block: 'nearest' });
   blockEdit = { start, end, original, box, ta };
   const fit = () => { ta.style.height = 'auto'; ta.style.height = `${ta.scrollHeight + 2}px`; };
   ta.addEventListener('input', fit);
@@ -2023,9 +2036,13 @@ preview.addEventListener('dblclick', e => {
 // Keyboard: Enter in the preview edits the first block at the top of the view.
 previewPane.addEventListener('keydown', e => {
   if (e.key !== 'Enter' || !previewEditable() || blockEdit || e.target.closest('a, button, input, textarea')) return;
-  const top = previewPane.getBoundingClientRect().top;
-  const blocks = [...preview.querySelectorAll('[data-line]')];
-  const block = blocks.find(el => el.getBoundingClientRect().bottom > top + 1) || blocks[0];
+  // Only a block that is in view; nothing when the view shows none (for
+  // example, inside the generated References list).
+  const view = previewPane.getBoundingClientRect();
+  const block = [...preview.querySelectorAll('[data-line]')].find(el => {
+    const r = el.getBoundingClientRect();
+    return r.bottom > view.top + 1 && r.top < view.bottom - 1;
+  });
   if (block) { e.preventDefault(); editBlock(block); }
 });
 preview.addEventListener('load', invalidateScrollMap, true); // images change heights
