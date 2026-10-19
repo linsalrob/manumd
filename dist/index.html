@@ -121,13 +121,15 @@ a { color:#087eb5 }
 .file-list li.static { cursor:default }
 .file-list li.static:hover { background:transparent }
 .outline { list-style:none; padding:0; margin:0 }
-/* Collapsible sidebar sections (issue #17). The outline takes the space the
-   other sections leave, scrolling on its own, so it fills the panel when
-   they are closed and keeps the sections below it in view when they are open. */
+/* Collapsible sidebar sections (issue #17). An open outline takes the space
+   the other sections leave, however few headings it has, and scrolls on its
+   own, so the sections below it stay in view. It never shrinks below its
+   heading and 96px of list: in a short window the panel scrolls instead. */
 .sidebar { display:flex; flex-direction:column }
 .sidebar > * { flex-shrink:0 }
-.sidebar > .side-outline { flex:0 1 auto; min-height:0; display:flex; flex-direction:column }
-.side-outline .side-body { min-height:96px; overflow:auto }
+.sidebar > .side-outline { flex:1 1 0; display:flex; flex-direction:column }
+.sidebar > .side-outline.collapsed { flex:none }
+.side-outline .side-body { flex:1 1 0; min-height:96px; overflow:auto }
 .side-toggle { display:flex; align-items:center; gap:6px; border:0; background:transparent; padding:2px 0; color:inherit; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer }
 .side-toggle:hover { color:#173e51 }
 .side-toggle:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:3px }
