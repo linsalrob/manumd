@@ -74,6 +74,7 @@ a { color:#087eb5 }
 .preview th { background:#f2f6f8 }
 .references { border-top:1px solid var(--line); margin-top:35px; padding-top:18px }
 .references h2 { font-size:17px }
+.references.placed { border-top:0; margin-top:0; padding-top:0 }
 .references ol { padding-left:22px; font-size:12px; line-height:1.6 }
 .empty-preview { color:#788b98; font:13px Inter,system-ui,sans-serif; text-align:center; padding:25vh 20px }
 .statusbar { height:32px; border-top:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; padding:0 14px; color:#728492; font-size:10px }
@@ -152,6 +153,7 @@ a { color:#087eb5 }
 .math.display:not(.typeset) { text-align:left; white-space:pre-wrap; padding:8px 12px }
 .relative-link { color:#087eb5; border-bottom:1px dotted #087eb5; cursor:help }
 .missing-image { display:block; margin:18px auto; padding:18px; border:1px dashed #cbd7df; border-radius:9px; color:#6f818e; font:12px/1.5 Inter,system-ui,sans-serif; text-align:center }
+.div-fence { height:0; margin:0 }
 .front-matter { font:12px/1.6 ui-monospace,monospace; color:#5c7180; background:#f6fafc; border:1px solid #e4ecf1; border-radius:8px; padding:10px 13px; white-space:pre-wrap; margin:0 0 18px }
 .preview hr { border:0; border-top:1px solid var(--line); margin:26px 0 }
 .status-warn { color:#b07400 }
@@ -653,6 +655,24 @@ function renderCitation(content, cited) {
   return `(${html.join('; ')})`;
 }
 
+// Pandoc attributes after an image, as in ![Caption](fig.png){#fig:1 width=100%}
+// (issue #19). The identifier becomes a link target, like a heading's, and
+// width and height size the image. Other attributes are ignored. Returns
+// attribute text that is safe to put in a tag.
+function imageAttributes(raw) {
+  if (!raw) return '';
+  let anchor = '';
+  const style = [];
+  for (const m of raw.slice(1, -1).matchAll(/#([^\s}]+)|([\w-]+)=("[^"]*"|'[^']*'|[^\s}]+)/g)) {
+    if (m[1]) anchor = anchor || m[1];
+    else if (m[2] === 'width' || m[2] === 'height') {
+      const v = m[3].replace(/^["']|["']$/g, '');
+      if (/^\d+(\.\d+)?(px|%|em|rem|cm|mm|in|pt)?$/.test(v)) style.push(`${m[2]}:${/\d$/.test(v) ? v + 'px' : v}`);
+    }
+  }
+  return (anchor ? ` data-anchor="${esc(slug(anchor))}"` : '') + (style.length ? ` style="${esc(style.join(';'))}"` : '');
+}
+
 function renderInline(text, cited) {
   const tokens = [], sources = [];
   const hold = (html, src) => {
@@ -676,22 +696,23 @@ function renderInline(text, cited) {
   t = t.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (m, __, code) => hold(`<code>${esc(code.trim())}</code>`, m));
 
   // Images: session images by path or file name, otherwise web URLs.
-  t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (m, alt, src) => {
+  t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)(\{[^{}\n]*\})?/g, (m, alt, src, attrs) => {
     alt = plain(alt);
     src = plain(src);
     let decoded = src;
     try { decoded = decodeURI(src); } catch { /* keep as written */ }
     const local = imageUrl(src, decoded);
-    if (local) return hold(`<img alt="${esc(alt)}" src="${esc(local)}">`, m);
-    if (isRelativePath(src)) return hold(`<span class="missing-image">Image not loaded: ${esc(decoded)}<br>Use “Add image files” to preview it in this session.</span>`, m);
+    const extra = imageAttributes(attrs);
+    if (local) return hold(`<img alt="${esc(alt)}" src="${esc(local)}"${extra}>`, m);
+    if (isRelativePath(src)) return hold(`<span class="missing-image"${extra.replace(/ style="[^"]*"/, '')}>Image not loaded: ${esc(decoded)}<br>Use “Add image files” to preview it in this session.</span>`, m);
     const url = safeUrl(src, ['http:', 'https:']);
-    return hold(url ? `<img alt="${esc(alt)}" src="${url}">` : esc(alt), m);
+    return hold(url ? `<img alt="${esc(alt)}" src="${url}"${extra}>` : esc(alt), m);
   });
 
   // Links: web links open in a new tab, #fragments scroll the preview, and
   // relative paths open the file on GitHub when the draft came from there.
   // Destinations are parsed before math so "$" in a URL is never math.
-  t = t.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g, (m, label, href) => {
+  t = t.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)(?:\{[^{}\n]*\})?/g, (m, label, href) => {
     href = plain(href);
     const inner = renderEmphasis(esc(math(label)));
     if (href.startsWith('#')) return hold(`<a href="${esc(href)}" data-fragment="${esc(slug(href.slice(1)))}">${inner}</a>`, m);
@@ -850,6 +871,18 @@ function renderMarkdown(md, cited, top = true) {
       const code = [];
       for (i++; i < lines.length && !lines[i].trim().startsWith(fence[1]); i++) code.push(lines[i]);
       html += `<pre${at(start)}><code>${esc(code.join('\n'))}</code></pre>`;
+      continue;
+    }
+
+    // Pandoc fenced divs (issue #19): the ::: lines are not shown and the
+    // contents render as usual. A div with the id refs marks where the
+    // reference list goes, as it does in Pandoc. The empty marker keeps the
+    // fence line out of the block before it when editing in the preview.
+    const div = line.match(/^\s*:{3,}(.*)$/);
+    if (div) {
+      flushAll();
+      html += `<div class="div-fence"${at(i)}></div>`;
+      if (top && /(^|[\s{])#refs(?=[\s}]|$)/.test(div[1])) html += '<div class="refs-here"></div>';
       continue;
     }
 
@@ -1231,8 +1264,14 @@ function updatePreview() {
   const keys = [...new Set(cited)];
   const found = keys.filter(k => library.byKey.has(k));
   const missing = keys.filter(k => !library.byKey.has(k));
+  // The reference list goes where a ::: {#refs} div puts it, under the
+  // manuscript's own heading as in Pandoc; otherwise at the end, under a
+  // References heading.
+  const list = `<ol>${found.map(k => `<li>${referenceHtml(library.byKey.get(k))}</li>`).join('')}</ol>`;
+  const placed = html.includes('<div class="refs-here"></div>');
   if (found.length) {
-    html += `<section class="references"><h2>References</h2><ol>${found.map(k => `<li>${referenceHtml(library.byKey.get(k))}</li>`).join('')}</ol></section>`;
+    html = placed ? html.replace('<div class="refs-here"></div>', () => `<section class="references placed">${list}</section>`)
+      : html + `<section class="references"><h2>References</h2>${list}</section>`;
   }
   preview.innerHTML = html;
   invalidateScrollMap();
@@ -2142,7 +2181,7 @@ previewPane.addEventListener('keydown', e => {
   const view = previewPane.getBoundingClientRect();
   const visible = [...preview.querySelectorAll('[data-line]')].filter(el => {
     const r = el.getBoundingClientRect();
-    return r.bottom > view.top + 1 && r.top < view.bottom - 1;
+    return r.height > 0 && r.bottom > view.top + 1 && r.top < view.bottom - 1;
   });
   // A table spans its rows: prefer a visible row over the whole table.
   const block = visible.find(el => !visible.some(other => other !== el && el.contains(other)));

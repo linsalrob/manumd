@@ -41,6 +41,8 @@ To cite several works together, insert them one after another. A citation insert
 | `[see @Smith2024, p. 4]` | (see Smith, 2024, p. 4) | a prefix and a locator |
 | `Smith [-@Smith2024] showed…` | Smith (2024) showed… | the year only, after the author's name |
 
+The reference list goes at the end of the preview, or wherever a `::: {#refs}` div puts it. See [Fenced divs](markdown.md#supported-markdown).
+
 The preview uses a simple author–year style: one author by surname, two joined by "&", three or more as "et al.". The reference list at the end lists each work in order of first citation, with a link to its DOI or URL.
 
 The preview does not apply journal styles (CSL). Use Pandoc for the final formatting. See [Turning the Markdown into a paper](markdown.md#turning-the-markdown-into-a-paper).
