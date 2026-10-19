@@ -1472,7 +1472,8 @@ function numberCrossrefs(md) {
   const link = (label, text) => {
     const a = document.createElement('a');
     a.href = '#' + label;
-    a.dataset.fragment = slug(label);
+    // The exact label, not its slug: "fig:a" and a heading "{#figa}" share one.
+    a.dataset.xref = label;
     a.textContent = text;
     return a;
   };
@@ -2459,10 +2460,11 @@ $('outline').addEventListener('mousedown', e => {
   if (e.target.closest('[data-line]')) e.preventDefault();
 });
 preview.addEventListener('click', e => {
-  const link = e.target.closest('a[data-fragment]');
+  const link = e.target.closest('a[data-fragment], a[data-xref]');
   if (!link) return;
   e.preventDefault();
-  const target = preview.querySelector(`[data-anchor="${CSS.escape(link.dataset.fragment)}"]`);
+  const target = link.dataset.xref ? preview.querySelector(`[data-label="${CSS.escape(link.dataset.xref)}"]`)
+    : preview.querySelector(`[data-anchor="${CSS.escape(link.dataset.fragment)}"]`);
   if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 

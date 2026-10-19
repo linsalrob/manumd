@@ -23,7 +23,7 @@ ManuMD is an early prototype. These are the main things it doesn't do, or does d
 - **In-text citations.** Only bracketed citations, such as `[@Smith2024]`, are formatted. An in-text citation such as `@Smith2024` is shown as text. (`@fig:1` and the other cross-references are formatted.)
 - **Simple citation style.** The preview uses a fixed author–year style. Journal styles (CSL) are applied by Pandoc.
 - **KaTeX, not LaTeX.** Most LaTeX math works, but not every package. Equations need an internet connection the first time.
-- **Front matter as text.** The YAML front matter is shown as text. ManuMD reads only its `bibliography:` field.
+- **Front matter as text.** The YAML front matter is shown as text. ManuMD reads only its `bibliography:` field and a few pandoc-crossref settings, such as `figureTitle` and `figPrefix`.
 
 ## Other
 

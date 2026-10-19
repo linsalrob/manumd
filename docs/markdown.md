@@ -85,7 +85,7 @@ Attributes after a link, such as `[text](https://example.org){.external}`, are h
 :::
 ```
 
-**YAML front matter.** A block between `---` lines at the very top of the file holds the title, authors and Pandoc settings. The preview shows it as text. ManuMD reads one field itself: `bibliography:`. See [Citations](citations.md#bibliography-from-github).
+**YAML front matter.** A block between `---` lines at the very top of the file holds the title, authors and Pandoc settings. The preview shows it as text. ManuMD reads the `bibliography:` field (see [Citations](citations.md#bibliography-from-github)) and the pandoc-crossref settings listed under [Cross-references](#cross-references).
 
 ```yaml
 ---
