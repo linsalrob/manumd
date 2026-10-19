@@ -1,6 +1,6 @@
 # Your data and privacy
 
-ManuMD has no server of its own. The app is one static web page. Once it has loaded, everything happens in your browser. Your manuscript, bibliography and token are never sent to ManuMD's authors or to any other service, apart from GitHub when you ask it to load or save.
+ManuMD has no server of its own. The app is one static web page. Once it has loaded, everything happens in your browser. Your manuscript, bibliography and token are never sent to ManuMD's authors. Your token goes only to GitHub, and your manuscript is sent only to GitHub, when you save. The preview does contact other sites in two cases: to download KaTeX for equations, and to show images that the manuscript links from the web. See [What goes over the network](#what-goes-over-the-network).
 
 ManuMD has no analytics, tracking or telemetry.
 
@@ -38,6 +38,10 @@ If browser storage is unavailable or full, for example in some private windows o
 | The ManuMD page | when you open it | nothing of yours |
 | GitHub API | when you load or save | the repository, branch and paths you entered, your token and, when saving, the Markdown file |
 | KaTeX, from the jsDelivr CDN | the first time a draft contains math | nothing of yours |
+| A web image's own site | when the preview shows an image with a web address, such as `![](https://example.org/fig.png)` | the image address, and what any browser sends with a request: your IP address and browser details |
+| A link's site | only when you click a link in the preview | as for any link you click |
+
+Images from your computer and from the paper's GitHub images folder are shown from the browser's own copies, with no further requests. To keep the preview from contacting other sites, keep figures in the repository and refer to them by relative paths such as `images/fig1.png`.
 
 ### KaTeX
 

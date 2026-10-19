@@ -14,6 +14,8 @@ The preview shows an image from one of three places, in this order:
 2. **The paper's images folder on GitHub,** when the draft was loaded from GitHub.
 3. **A web address,** such as `https://example.org/figure.png`.
 
+   The browser downloads a web image from its site, so that site sees the request. See [Your data and privacy](privacy.md#what-goes-over-the-network).
+
 A relative path that matches none of them shows a placeholder, **Image not loaded**, with the path.
 
 ## Add image files from your computer
