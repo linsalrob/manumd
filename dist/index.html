@@ -816,7 +816,9 @@ const TABLE_CAPTION = /^\s*(?:[Tt]able)?:\s/;
 
 // A table caption's attributes for the table's block, and its <caption>.
 // A {#tbl:x} label at the end of the caption is pandoc-crossref's.
-function tableCaption(caption, inline) {
+// A caption after the table maps to its own source lines (lineAttr), so
+// editing it in the preview edits the caption.
+function tableCaption(caption, inline, lineAttr) {
   if (!caption) return { attrs: '', html: '' };
   let text = caption.text.replace(TABLE_CAPTION, '').trim();
   const attrs = text.match(/\s*\{([^{}]*)\}$/);
@@ -824,7 +826,7 @@ function tableCaption(caption, inline) {
   if (attrs) text = text.slice(0, attrs.index);
   return {
     attrs: id ? ` data-anchor="${esc(slug(id[1]))}"${/^tbl:/.test(id[1]) ? ` data-label="${esc(id[1])}"` : ''}` : '',
-    html: `<caption><span class="xref-title"></span>${inline(text)}</caption>`
+    html: `<caption${lineAttr}><span class="xref-title"></span>${inline(text)}</caption>`
   };
 }
 
@@ -1039,11 +1041,11 @@ function renderMarkdown(md, cited, top = true) {
       if (!caption && after > 0) {
         let end = after;
         while (end + 1 < lines.length && lines[end + 1].trim() && !startsBlock(lines, end + 1)) end++;
-        caption = { text: lines.slice(after, end + 1).join(' ') };
+        caption = { text: lines.slice(after, end + 1).join(' '), after };
         i = end + 1;
       }
       i--;
-      const cap = tableCaption(caption, inline);
+      const cap = tableCaption(caption, inline, caption && caption.after !== undefined ? at(caption.after) : '');
       html += `<div class="table-wrap"${at(start)}${cap.attrs}><table>${cap.html}${table}</tbody></table></div>`;
       caption = null;
       continue;
@@ -1232,9 +1234,10 @@ function alignPreviewToSource() {
   if (!splitVisible()) return;
   const line = source.value.slice(0, source.selectionStart).split('\n').length - 1;
   let block = null;
+  // The last block starting at or before the line. Not always the last in
+  // page order: a table's caption is shown above rows that come before it.
   for (const el of preview.querySelectorAll('[data-line]')) {
-    if (+el.dataset.line <= line) block = el;
-    else break;
+    if (+el.dataset.line <= line && (!block || +el.dataset.line >= +block.dataset.line)) block = el;
   }
   if (!block) return;
   const tops = sourceLineTops();
