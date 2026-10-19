@@ -1,0 +1,12 @@
+/* Small additions to the Furo theme in the ManuMD palette. */
+.sidebar-brand-text {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+kbd:not(.compound) {
+  border: 1px solid #8ed7c4;
+  border-radius: 4px;
+  padding: 0 0.3em;
+  font-size: 0.85em;
+}
