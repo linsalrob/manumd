@@ -6,6 +6,7 @@
 - The runnable app is the single static file `dist/index.html`; open it directly in a modern browser to work on it.
 - Keep the prototype dependency-free unless a change clearly needs a build system. If the project structure changes, update `README.md` with the new run instructions.
 - `README.md` describes the current implemented behavior and limitations. Keep it accurate when changing features.
+- The user documentation in `docs/` (Sphinx with MyST Markdown, published by Read the Docs) also describes behavior in detail. Update the affected pages when changing features, and check that `python -m sphinx -W -b html docs docs/_build/html` still builds without warnings.
 
 ## Product requirements
 

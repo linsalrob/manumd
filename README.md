@@ -2,6 +2,8 @@
 
 ManuMD is a local-first Markdown writing prototype for research manuscripts.
 
+**Documentation:** <https://manumd.readthedocs.io/>, built from [`docs/`](docs/). Co-authors new to GitHub can start with [Editing a paper with co-authors](docs/collaborating.md).
+
 ## Current prototype
 
 - Edit Markdown with a live preview (split, edit-only or preview-only view) and inline image display.
@@ -49,6 +51,18 @@ This is an early prototype. It loads and saves one Markdown file at a time. Manu
 ## Run locally
 
 Open `dist/index.html` in a modern browser. The GitHub API requires a network connection; local editing and preview work without one.
+
+## Documentation
+
+The user documentation is Markdown in `docs/`, built with Sphinx and MyST by Read the Docs (`.readthedocs.yaml`) on each push to `main`. To build it locally:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r docs/requirements.txt
+.venv/bin/python -m sphinx -W -b html docs docs/_build/html
+```
+
+The Sphinx toolchain is used only for the documentation; the app itself stays dependency-free.
 
 ## Hosted version
 
