@@ -128,7 +128,7 @@ a { color:#087eb5 }
 .layout.view-edit .preview-pane { display:none }
 .layout.view-edit .source-pane { border-right:0 }
 .layout.view-preview .source-pane { display:none }
-.file-list li:focus-visible { outline:3px solid var(--gold); outline-offset:1px }
+.file-list li:focus-visible { outline:3px solid var(--gold); outline-offset:-3px }
 .file-list li.static { cursor:default }
 .file-list li.static:hover { background:transparent }
 .outline { list-style:none; padding:0; margin:0 }
@@ -141,6 +141,10 @@ a { color:#087eb5 }
 .sidebar > .side-outline { flex:1 1 0; display:flex; flex-direction:column }
 .sidebar > .side-outline.collapsed { flex:none }
 .side-outline .side-body { flex:1 1 0; min-height:96px; overflow:auto }
+/* Draft files sits below the outline (issue #23). A paper with many images
+   would otherwise squeeze the outline, so past about five files the list
+   scrolls on its own. */
+#filesBody { max-height:160px; overflow:auto }
 .side-toggle { display:flex; align-items:center; gap:6px; border:0; background:transparent; padding:2px 0; color:inherit; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer }
 .side-toggle:hover { color:#173e51 }
 .side-toggle:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:3px }
@@ -215,11 +219,6 @@ td .block-editor { margin:0 }
 <div class="layout view-split" id="layout">
   <aside class="sidebar">
     <div class="workspace-name"><span class="folder-icon">▰</span> Manuscript workspace</div>
-    <section class="side-section" data-section="files">
-      <div class="side-heading"><button class="side-toggle" id="filesHeading" aria-expanded="true" aria-controls="filesBody"><span class="chevron" aria-hidden="true">▾</span>Draft files</button><button title="Start a new Markdown file" aria-label="Start a new Markdown file" id="addFileBtn">＋</button></div>
-      <div class="side-body" id="filesBody"><ul class="file-list" id="fileList"></ul></div>
-    </section>
-    <div class="separator"></div>
     <section class="side-section side-outline" data-section="outline">
       <div class="side-heading"><button class="side-toggle" id="outlineHeading" aria-expanded="true" aria-controls="outlineBody"><span class="chevron" aria-hidden="true">▾</span>Outline</button></div>
       <nav class="side-body" id="outlineBody" aria-labelledby="outlineHeading"><ul class="outline" id="outline"></ul></nav>
@@ -241,6 +240,11 @@ td .block-editor { margin:0 }
         <div class="side-note">A lightweight research editor built around plain Markdown, portable citations, and your existing GitHub workflow.</div>
         <div class="privacy-note">Your draft stays in this browser until you download it or choose to save it to GitHub. Grammarly works through your installed browser extension, if available; support in the Markdown text area depends on the browser and extension.</div>
       </div>
+    </section>
+    <div class="separator"></div>
+    <section class="side-section" data-section="files">
+      <div class="side-heading"><button class="side-toggle" id="filesHeading" aria-expanded="true" aria-controls="filesBody"><span class="chevron" aria-hidden="true">▾</span>Draft files</button><button title="Start a new Markdown file" aria-label="Start a new Markdown file" id="addFileBtn">＋</button></div>
+      <div class="side-body" id="filesBody"><ul class="file-list" id="fileList"></ul></div>
     </section>
   </aside>
   <main class="main">
