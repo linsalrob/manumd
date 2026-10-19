@@ -1033,7 +1033,8 @@ function renderMarkdown(md, cited, top = true) {
       const align = splitRow(lines[i + 1]).map(c => c.endsWith(':') ? (c.startsWith(':') ? 'center' : 'right') : 'left');
       const cell = (tag, c, n) => `<${tag} style="text-align:${align[n] || 'left'}">${inline(c)}</${tag}>`;
       let table = `<thead><tr>${header.map((c, n) => cell('th', c, n)).join('')}</tr></thead><tbody>`;
-      for (i += 2; i < lines.length && lines[i].includes('|') && lines[i].trim(); i++) {
+      // Rows end at a blank line, or at a caption even if it holds a | (as in $|x|$).
+      for (i += 2; i < lines.length && lines[i].includes('|') && lines[i].trim() && !TABLE_CAPTION.test(lines[i]); i++) {
         table += `<tr${at(i)}>${splitRow(lines[i]).map((c, n) => cell('td', c, n)).join('')}</tr>`;
       }
       // Or a caption after it, again after at most one blank line.
