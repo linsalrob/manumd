@@ -730,7 +730,8 @@ function renderInline(text, cited) {
   t = t.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (m, __, code) => hold(`<code>${esc(code.trim())}</code>`, m));
 
   // Images: session images by path or file name, otherwise web URLs.
-  t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)(\{[^{}\n]*\})?/g, (m, alt, src, attrs) => {
+  // The text may hold bracketed citations: ![Data from [@Smith2024]](a.png).
+  t = t.replace(/!\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)(\{[^{}\n]*\})?/g, (m, alt, src, attrs) => {
     alt = plain(alt);
     src = plain(src);
     let decoded = src;
@@ -804,6 +805,13 @@ function isTableStart(lines, n) {
   return n + 1 < lines.length && lines[n].includes('|') && lines[n + 1].includes('|') && /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/.test(lines[n + 1]);
 }
 
+// A line that begins a block of its own (a heading, list, quote, fence,
+// rule, display math or table), so a caption ends before it.
+function startsBlock(lines, n) {
+  const line = lines[n];
+  return /^\s*(#{1,6}\s|>|```|~~~|:{3,}|\$\$|([-*+]|\d+[.)])\s)/.test(line) || /^\s*([-*_])(\s*\1){2,}\s*$/.test(line) || isTableStart(lines, n);
+}
+
 const TABLE_CAPTION = /^\s*(?:[Tt]able)?:\s/;
 
 // A table caption's attributes for the table's block, and its <caption>.
@@ -823,7 +831,7 @@ function tableCaption(caption, inline) {
 // Pandoc makes an image that is alone in its paragraph into a figure, with
 // the image's text as its caption (the figure legend). A {#fig:x} label is
 // pandoc-crossref's, which numbers the figure.
-const FIGURE = /^!\[([^\]]+)\]\(\s*<?[^)\s>]+>?(?:\s+"[^"]*")?\s*\)(\{[^{}\n]*\})?$/;
+const FIGURE = /^!\[((?:[^\[\]]|\[[^\[\]]*\])+)\]\(\s*<?[^)\s>]+>?(?:\s+"[^"]*")?\s*\)(\{[^{}\n]*\})?$/;
 
 function figureHtml(text, fig, inline, lineAttr) {
   const id = fig[2] && fig[2].match(/#([^\s}]+)/);
@@ -1005,7 +1013,7 @@ function renderMarkdown(md, cited, top = true) {
     // table, after at most one blank line.
     if (!para.length && TABLE_CAPTION.test(line)) {
       let end = i;
-      while (end + 1 < lines.length && lines[end + 1].trim() && !isTableStart(lines, end + 1)) end++;
+      while (end + 1 < lines.length && lines[end + 1].trim() && !startsBlock(lines, end + 1)) end++;
       const next = isTableStart(lines, end + 1) ? end + 1 : !lines[end + 1]?.trim() && isTableStart(lines, end + 2) ? end + 2 : -1;
       if (next > 0) {
         flushAll();
@@ -1030,7 +1038,7 @@ function renderMarkdown(md, cited, top = true) {
       const after = TABLE_CAPTION.test(lines[i] || '') ? i : !(lines[i] || '').trim() && TABLE_CAPTION.test(lines[i + 1] || '') ? i + 1 : -1;
       if (!caption && after > 0) {
         let end = after;
-        while (end + 1 < lines.length && lines[end + 1].trim()) end++;
+        while (end + 1 < lines.length && lines[end + 1].trim() && !startsBlock(lines, end + 1)) end++;
         caption = { text: lines.slice(after, end + 1).join(' ') };
         i = end + 1;
       }
