@@ -57,6 +57,27 @@ Nothing inside a code block is formatted, including comments, citations and math
 - `#heading` links scroll the preview to that heading.
 - Relative links, such as `[the data](data/table.csv)`, open the file on GitHub when the draft was loaded from GitHub.
 
+**Image attributes.** Pandoc's attributes after an image, such as the figure labels used by pandoc-crossref, are applied and not shown:
+
+```markdown
+![**Figure 1.** Entropy across the genome.](images/fig1.png){#fig:1 width=100%}
+```
+
+- the identifier (`#fig:1`) becomes a link target, so `[Figure 1](#fig:1)` scrolls the preview to the figure;
+- `width` and `height` size the image, in pixels or units such as `%`, `cm` or `in`;
+- other attributes are ignored by the preview and kept in the file for Pandoc.
+
+Attributes after a link, such as `[text](https://example.org){.external}`, are hidden too.
+
+**Fenced divs.** Pandoc's `:::` fences are hidden, and the text between them is shown as usual. `::: {#refs}` marks where the reference list goes, as it does in Pandoc. The preview places it there, under your own heading, instead of at the end:
+
+```markdown
+# References
+
+::: {#refs}
+:::
+```
+
 **YAML front matter.** A block between `---` lines at the very top of the file holds the title, authors and Pandoc settings. The preview shows it as text. ManuMD reads one field itself: `bibliography:`. See [Citations](citations.md#bibliography-from-github).
 
 ```yaml
