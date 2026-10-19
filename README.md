@@ -7,6 +7,7 @@ ManuMD is a local-first Markdown writing prototype for research manuscripts.
 ## Current prototype
 
 - Edit Markdown with a live preview (split, edit-only or preview-only view) and inline image display.
+- The **Outline** in the left-hand panel lists the H1–H3 headings. Click one, or press Enter on it, to jump there: the Markdown and the preview both scroll to the heading, and the cursor moves to it.
 - In split view, double-click either pane to bring the other into line at the same place, or turn on **⇅ Sync scroll** to keep them scrolled together.
 - In preview view, double-click a paragraph, heading, list item, table row, quote, equation or code block (or press Enter in the preview) to edit its Markdown in place. Ctrl/⌘+Enter, **Apply** or clicking away applies the edit; Esc cancels. The edit replaces exactly the Markdown lines that block came from, so the rest of the file, including citations, math and comments, is unchanged.
 - Load a BibTeX file exported or synced from Paperpile, search it, and insert Pandoc-style citations. Import the `.bib` file with **Import .bib**, or keep it in the manuscript's GitHub repository and it is loaded with the Markdown. The preview formats citations and builds a reference list in order of first citation, and the status bar flags citation keys that are not in the loaded bibliography.

@@ -120,6 +120,14 @@ a { color:#087eb5 }
 .file-list li:focus-visible { outline:3px solid var(--gold); outline-offset:1px }
 .file-list li.static { cursor:default }
 .file-list li.static:hover { background:transparent }
+.outline { list-style:none; padding:0; margin:0; max-height:40vh; overflow:auto }
+.outline-item { display:block; width:100%; text-align:left; border:0; background:transparent; padding:5px 8px; border-radius:7px; color:#435968; font:inherit; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer }
+.outline-item:hover { background:#eaf1f5 }
+.outline-item:focus-visible { outline:3px solid var(--gold); outline-offset:-3px }
+.outline-item.level-1 { font-weight:700; color:#173e51 }
+.outline-item.level-2 { padding-left:18px }
+.outline-item.level-3 { padding-left:28px; color:#5c7180 }
+.outline-empty { font-size:11px; color:#758795; padding:4px 8px; line-height:1.5 }
 .cite-missing { color:#b31b34 }
 .sync-toggle.on { background:#e4f4fa; border-color:var(--cyan); color:#075f87 }
 .layout:not(.view-split) .sync-toggle { display:none }
@@ -181,6 +189,9 @@ td .block-editor { margin:0 }
     <div class="workspace-name"><span class="folder-icon">▰</span> Manuscript workspace</div>
     <div class="side-heading">Draft files <button title="Start a new Markdown file" aria-label="Start a new Markdown file" id="addFileBtn">＋</button></div>
     <ul class="file-list" id="fileList"></ul>
+    <div class="separator"></div>
+    <div class="side-heading" id="outlineHeading">Outline</div>
+    <nav aria-labelledby="outlineHeading"><ul class="outline" id="outline"></ul></nav>
     <div class="separator"></div>
     <div class="side-heading">Quick actions</div>
     <div class="quick-grid">
@@ -1199,6 +1210,7 @@ function updatePreview() {
   }
   preview.innerHTML = html;
   invalidateScrollMap();
+  renderOutline();
   typesetMath();
 
   const words = text.trim().split(/\s+/).filter(Boolean).length;
@@ -1220,6 +1232,51 @@ function setStorageStatus(ok) {
   const el = $('storageStatus');
   el.className = ok ? 'status-green' : 'status-warn';
   el.textContent = ok ? '● Draft saved in this browser' : '● Browser storage unavailable or full — download your draft';
+}
+
+// ---------------------------------------------------------------------------
+// Outline (issue #15): the H1-H3 headings, listed in the sidebar, jump to
+// their section. It is built from the rendered preview, so headings inside
+// code blocks, comments and quotes are left out, as the preview leaves them.
+// ---------------------------------------------------------------------------
+let outlineKey = null;
+
+function outlineHeadings() {
+  return [...preview.querySelectorAll('h1[data-line], h2[data-line], h3[data-line]')];
+}
+
+function renderOutline() {
+  const items = outlineHeadings().map(h => ({ level: +h.tagName[1], text: h.textContent.trim() || '(untitled)' }));
+  // Rebuild only when the headings change, so typing elsewhere does not
+  // replace a button that has focus or is being clicked.
+  const key = JSON.stringify(items);
+  if (key === outlineKey) return;
+  outlineKey = key;
+  $('outline').innerHTML = items.length
+    ? items.map((it, n) => `<li><button class="outline-item level-${it.level}" data-index="${n}" title="${esc(it.text)}">${esc(it.text)}</button></li>`).join('')
+    : '<li class="outline-empty">Headings appear here. Start a line with # to add one.</li>';
+}
+
+// Jump to the nth heading. Its line is looked up now, not when the outline
+// was drawn, because edits since then may have moved it.
+function goToHeading(n) {
+  finishBlockEdit(true, false);
+  const h = outlineHeadings()[n];
+  if (!h) return;
+  const line = +h.dataset.line;
+  const sourceShown = source.offsetParent !== null && source.clientHeight > 0;
+  const previewShown = previewPane.offsetParent !== null;
+  // With sync scroll on, the source scroll below also realigns the preview.
+  if (previewShown) scrollWithoutEcho(previewPane, previewY(h) - 12);
+  if (sourceShown) {
+    const top = sourceLineTops()[line];
+    if (top !== undefined) source.scrollTop = Math.max(0, top - 12);
+    const pos = lineOffset(source.value, line);
+    source.focus({ preventScroll: true });
+    source.setSelectionRange(pos, pos);
+  } else {
+    previewPane.focus({ preventScroll: true });
+  }
 }
 
 function renderRefList() {
@@ -2050,6 +2107,10 @@ previewPane.addEventListener('keydown', e => {
 preview.addEventListener('load', invalidateScrollMap, true); // images change heights
 window.addEventListener('resize', invalidateLineTops);
 $('syncBtn').onclick = () => setSyncScroll(!syncScroll);
+$('outline').onclick = e => {
+  const item = e.target.closest('[data-index]');
+  if (item) goToHeading(+item.dataset.index);
+};
 preview.addEventListener('click', e => {
   const link = e.target.closest('a[data-fragment]');
   if (!link) return;

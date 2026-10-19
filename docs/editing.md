@@ -10,6 +10,16 @@ The **Split**, **Edit** and **Preview** buttons above the text choose the view:
 
 The preview updates as you type.
 
+## Jumping to a section
+
+The **Outline** in the left-hand panel lists the paper's headings: `#`, `##` and `###`, indented by level. Click a heading, or {kbd}`Tab` to it and press {kbd}`Enter`, to jump there:
+
+- **Split view:** both panes scroll to the heading, and the cursor moves to the start of its line, ready to type.
+- **Edit view:** the Markdown scrolls to the heading, with the cursor on it.
+- **Preview view:** the preview scrolls to the heading. Press {kbd}`Enter` to edit it.
+
+The outline updates as you add, rename or remove headings. Headings inside code blocks, block quotes and comments are left out, as they are in the preview. Deeper headings (`####` and below) aren't listed.
+
 ## Keeping the two panes together
 
 In Split view:
@@ -62,6 +72,7 @@ See [Markdown and equations](markdown.md) for everything the preview understands
 | {kbd}`Ctrl+I` / {kbd}`⌘+I` | Italic |
 | {kbd}`Ctrl+S` / {kbd}`⌘+S` | Download the Markdown file |
 | {kbd}`Ctrl+Shift+C` / {kbd}`⌘+Shift+C` | Open the citation picker |
+| Click or {kbd}`Enter` on an outline heading | Jump to that section |
 | Double-click, Split view | Align the other pane |
 | Double-click or {kbd}`Enter`, Preview view | Edit a block in place |
 | {kbd}`Ctrl+Enter` / {kbd}`⌘+Enter` | Apply a block edit |
