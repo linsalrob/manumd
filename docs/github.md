@@ -16,7 +16,7 @@ To save commits, or to read a private repository, ManuMD needs a GitHub **fine-g
    - **Token name:** something you'll recognise, such as `ManuMD paper`.
    - **Expiration:** a date after you expect to finish, such as 90 days. You can make a new token later.
    - **Resource owner:** the account that owns the manuscript repository. For an organisation's repository, choose the organisation. The organisation may need to approve the token.
-   - **Repository access:** **Only select repositories**, then the manuscript repository.
+   - **Repository access:** **Only select repositories**, then the manuscript repository. If you write several papers, select each of their repositories, so one token works for all of them. See [One token for several manuscripts](#one-token-for-several-manuscripts).
    - **Permissions:** under **Repository permissions**, set **Contents** to **Read and write**. (On some versions of the page, first click **Add permissions** and tick **Contents**.) GitHub adds **Metadata: Read-only** automatically. Leave everything else off.
 6. Click **Generate token**.
 7. **Copy the token now.** It starts with `github_pat_`, and GitHub shows it only once. If you lose it, delete it and make another.
@@ -24,6 +24,20 @@ To save commits, or to read a private repository, ManuMD needs a GitHub **fine-g
 Keep the token private, like a password. Paste it only into ManuMD's GitHub dialog.
 
 For a **public** repository, you can load files without a token. Saving always needs one.
+
+### One token for several manuscripts
+
+You don't need a new token for each paper. One fine-grained token can cover several repositories:
+
+- **When you make the token,** choose **Only select repositories** and select every manuscript repository.
+- **For a new paper later,** edit the token on GitHub (Settings → Developer settings → Fine-grained tokens, then click the token) and add the new repository under **Repository access**.
+
+Some limits:
+
+- **One owner per token.** A token covers repositories of one owner only: your account or a single organisation. Papers in your account and papers in a lab organisation need a token each.
+- **More reach if it leaks.** Anyone who has the token can change every repository it covers. Select only manuscript repositories, rather than **All repositories**, and give only **Contents** permission.
+
+ManuMD keeps the token until you close the tab, so you paste it once per tab and then switch between papers with [Recent manuscripts](#switch-between-manuscripts).
 
 ## Load a file
 
@@ -44,6 +58,18 @@ For a **public** repository, you can load files without a token. Saving always n
 ManuMD loads the file, then the images and the bibliography. See [Images from GitHub](images.md#images-from-github) and [Bibliography from GitHub](citations.md#bibliography-from-github).
 
 ManuMD remembers the repository, branch, file and folders with the draft. Next time, open the dialog and click **Load file** straight away.
+
+## Switch between manuscripts
+
+ManuMD keeps a list of the ten files you loaded or committed most recently. To switch to another paper:
+
+1. Click **↗ GitHub**.
+2. Choose the paper under **Recent manuscripts**. ManuMD fills in its repository, branch, file and folders.
+3. Click **Load file**.
+
+The list is kept in the browser's local storage, so it lasts after you close the tab. It holds only where each file is, never a token: in a new tab, paste the token again. With [one token for several manuscripts](#one-token-for-several-manuscripts), the same token works for every paper on the list.
+
+**Clear list**, next to the list, removes every entry. The list is also cleared when you clear the browser's data for the site.
 
 ## Save a commit
 
@@ -83,7 +109,7 @@ Some repositories don't allow direct commits to their main branch. ManuMD then e
 - **Sent only to GitHub.** It goes from your browser to `api.github.com` and nowhere else.
 - **Forget token** in the GitHub dialog removes it at once. Use it when you finish on a shared computer.
 
-On the hosted site, session storage belongs to `linsalrob.github.io`, which all GitHub Pages projects under that account share. Another page from that address opened *in the same tab* could read the token. That's one reason to use a fine-grained token limited to the manuscript repository. See [Your data and privacy](privacy.md).
+On the hosted site, session storage belongs to `linsalrob.github.io`, which all GitHub Pages projects under that account share. Another page from that address opened *in the same tab* could read the token. That's one reason to use a fine-grained token limited to your manuscript repositories. See [Your data and privacy](privacy.md).
 
 ## When GitHub refuses
 

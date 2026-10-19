@@ -10,6 +10,7 @@ ManuMD has no analytics, tracking or telemetry.
 |---|---|---|
 | Draft text, document name and bibliography | the browser's local storage | until you replace them or clear your browser data |
 | Repository, branch, file, folders and the version you loaded | local storage, with the draft | as above |
+| Recent manuscripts: the repository, branch, file and folders of the last ten files you loaded or committed | local storage | until you click **Clear list** or clear your browser data |
 | The **⇅ Sync scroll** setting, and which sidebar sections are closed | local storage | as above |
 | GitHub token | the tab's session storage | until you close the tab or click **Forget token** |
 | Images from GitHub | the browser's IndexedDB | the three most recent versions of each folder; older ones are removed |
@@ -27,7 +28,7 @@ If browser storage is unavailable or full, for example in some private windows o
 
 **Shared origin.** Session storage belongs to the site's origin. On the hosted app the origin is `linsalrob.github.io`, which every GitHub Pages project under that account shares. Another page from that origin opened *in the same tab* could read the token. To limit the risk:
 
-- use a fine-grained token limited to the manuscript repository, with only **Contents** permission;
+- use a fine-grained token limited to your manuscript repositories, with only **Contents** permission;
 - give it an expiry date;
 - click **Forget token** when you finish, especially on a shared computer.
 
