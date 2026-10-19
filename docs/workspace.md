@@ -13,13 +13,16 @@ ManuMD's screen has a top bar, a left-hand panel, the editor in the middle, a ri
 
 ## Left-hand panel
 
+The panel has four sections. Click a section's heading, or {kbd}`Tab` to it and press {kbd}`Enter`, to close or reopen it. For example, close the other three to give the outline the whole panel. The browser remembers which sections are closed.
+
 - **Draft files:** the current Markdown file, the bibliography and any images. **＋** starts a new, empty Markdown file.
-- **Outline:** the paper's headings, down to level 3. Click one to jump to it. See [Jumping to a section](editing.md#jumping-to-a-section).
+- **Outline:** the paper's headings, down to level 3. Click one to jump to it. A long outline scrolls on its own, and grows to fill the space that closed sections leave. See [Jumping to a section](editing.md#jumping-to-a-section).
 - **Quick actions:**
   - **＋ Citation** opens the citation picker.
   - **Import .bib** loads a BibTeX file.
   - **＋ Image** adds image files from your computer to the preview.
   - **⇩ Download** downloads the Markdown file, like **Save draft**.
+- **Writing setup:** a short note on where your draft is kept, and on grammar-checking extensions.
 
 ## Editor
 

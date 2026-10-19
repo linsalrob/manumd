@@ -10,7 +10,7 @@ ManuMD has no analytics, tracking or telemetry.
 |---|---|---|
 | Draft text, document name and bibliography | the browser's local storage | until you replace them or clear your browser data |
 | Repository, branch, file, folders and the version you loaded | local storage, with the draft | as above |
-| The **⇅ Sync scroll** setting | local storage | as above |
+| The **⇅ Sync scroll** setting, and which sidebar sections are closed | local storage | as above |
 | GitHub token | the tab's session storage | until you close the tab or click **Forget token** |
 | Images from GitHub | the browser's IndexedDB | the three most recent versions of each folder; older ones are removed |
 | Image files you add | memory only | until you reload or close the tab |
