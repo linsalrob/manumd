@@ -1257,11 +1257,19 @@ function renderOutline() {
     : '<li class="outline-empty">Headings appear here. Start a line with # to add one.</li>';
 }
 
-// Jump to the nth heading. Its line is looked up now, not when the outline
-// was drawn, because edits since then may have moved it.
-function goToHeading(n) {
+// Jump to the heading an outline item names. Its line is looked up now, not
+// when the outline was drawn, because edits since then may have moved it. An
+// open block edit is applied first, which may add, remove or rename headings,
+// so the heading is found again by its level, text and occurrence.
+function goToHeading(item) {
+  const items = [...$('outline').querySelectorAll('[data-index]')];
+  const n = items.indexOf(item);
+  const same = (cls, text) => cls === item.className && text === item.textContent;
+  const occurrence = items.slice(0, n).filter(b => same(b.className, b.textContent)).length;
   finishBlockEdit(true, false);
-  const h = outlineHeadings()[n];
+  const headings = outlineHeadings();
+  const matches = headings.filter(h => same(`outline-item level-${h.tagName[1]}`, h.textContent.trim() || '(untitled)'));
+  const h = matches[occurrence] || headings[Math.min(n, headings.length - 1)];
   if (!h) return;
   const line = +h.dataset.line;
   const sourceShown = source.offsetParent !== null && source.clientHeight > 0;
@@ -2111,8 +2119,13 @@ window.addEventListener('resize', invalidateLineTops);
 $('syncBtn').onclick = () => setSyncScroll(!syncScroll);
 $('outline').onclick = e => {
   const item = e.target.closest('[data-index]');
-  if (item) goToHeading(+item.dataset.index);
+  if (item) goToHeading(item);
 };
+// Pressing an item must not take focus: that would end an open block edit
+// and rebuild the outline before the click arrives, losing the jump.
+$('outline').addEventListener('mousedown', e => {
+  if (e.target.closest('[data-index]')) e.preventDefault();
+});
 preview.addEventListener('click', e => {
   const link = e.target.closest('a[data-fragment]');
   if (!link) return;
