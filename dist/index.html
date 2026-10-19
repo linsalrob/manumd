@@ -30,7 +30,7 @@ a { color:#087eb5 }
 .sidebar,.inspector { background:#f8fafc; padding:18px 14px; border-right:1px solid var(--line); overflow:auto }
 .inspector { border-right:0; border-left:1px solid var(--line); background:#f7f9fb }
 .side-heading { display:flex; justify-content:space-between; align-items:center; padding:0 7px; margin:0 0 8px; color:#5c7180; font-size:10px; letter-spacing:.13em; font-weight:800; text-transform:uppercase }
-.side-heading button { border:0; background:transparent; color:#708493; font-size:17px }
+.side-heading button:not(.side-toggle) { border:0; background:transparent; color:#708493; font-size:17px }
 .workspace-name { display:flex; gap:9px; align-items:center; font-size:13px; font-weight:750; padding:10px 8px 14px }
 .folder-icon { color:#b58a36 }
 .file-list { list-style:none; padding:0; margin:0 }
@@ -120,7 +120,21 @@ a { color:#087eb5 }
 .file-list li:focus-visible { outline:3px solid var(--gold); outline-offset:1px }
 .file-list li.static { cursor:default }
 .file-list li.static:hover { background:transparent }
-.outline { list-style:none; padding:0; margin:0; max-height:40vh; overflow:auto }
+.outline { list-style:none; padding:0; margin:0 }
+/* Collapsible sidebar sections (issue #17). The outline takes the space the
+   other sections leave, scrolling on its own, so it fills the panel when
+   they are closed and keeps the sections below it in view when they are open. */
+.sidebar { display:flex; flex-direction:column }
+.sidebar > * { flex-shrink:0 }
+.sidebar > .side-outline { flex:0 1 auto; min-height:0; display:flex; flex-direction:column }
+.side-outline .side-body { min-height:96px; overflow:auto }
+.side-toggle { display:flex; align-items:center; gap:6px; border:0; background:transparent; padding:2px 0; color:inherit; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer }
+.side-toggle:hover { color:#173e51 }
+.side-toggle:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:3px }
+.chevron { display:inline-block; width:10px; font-size:10px; letter-spacing:0; transition:transform .15s }
+.side-section.collapsed .chevron { transform:rotate(-90deg) }
+.side-section.collapsed .side-heading { margin-bottom:0 }
+.side-body[hidden] { display:none }
 .outline-item { display:block; width:100%; text-align:left; border:0; background:transparent; padding:5px 8px; border-radius:7px; color:#435968; font:inherit; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer }
 .outline-item:hover { background:#eaf1f5 }
 .outline-item:focus-visible { outline:3px solid var(--gold); outline-offset:-3px }
@@ -187,23 +201,33 @@ td .block-editor { margin:0 }
 <div class="layout view-split" id="layout">
   <aside class="sidebar">
     <div class="workspace-name"><span class="folder-icon">▰</span> Manuscript workspace</div>
-    <div class="side-heading">Draft files <button title="Start a new Markdown file" aria-label="Start a new Markdown file" id="addFileBtn">＋</button></div>
-    <ul class="file-list" id="fileList"></ul>
+    <section class="side-section" data-section="files">
+      <div class="side-heading"><button class="side-toggle" id="filesHeading" aria-expanded="true" aria-controls="filesBody"><span class="chevron" aria-hidden="true">▾</span>Draft files</button><button title="Start a new Markdown file" aria-label="Start a new Markdown file" id="addFileBtn">＋</button></div>
+      <div class="side-body" id="filesBody"><ul class="file-list" id="fileList"></ul></div>
+    </section>
     <div class="separator"></div>
-    <div class="side-heading" id="outlineHeading">Outline</div>
-    <nav aria-labelledby="outlineHeading"><ul class="outline" id="outline"></ul></nav>
+    <section class="side-section side-outline" data-section="outline">
+      <div class="side-heading"><button class="side-toggle" id="outlineHeading" aria-expanded="true" aria-controls="outlineBody"><span class="chevron" aria-hidden="true">▾</span>Outline</button></div>
+      <nav class="side-body" id="outlineBody" aria-labelledby="outlineHeading"><ul class="outline" id="outline"></ul></nav>
+    </section>
     <div class="separator"></div>
-    <div class="side-heading">Quick actions</div>
-    <div class="quick-grid">
-      <button class="button" id="citeBtn">＋ Citation</button>
-      <button class="button" id="bibBtn">Import .bib</button>
-      <button class="button" id="imageBtn">＋ Image</button>
-      <button class="button" id="downloadBtn">⇩ Download</button>
-    </div>
+    <section class="side-section" data-section="actions">
+      <div class="side-heading"><button class="side-toggle" id="actionsHeading" aria-expanded="true" aria-controls="actionsBody"><span class="chevron" aria-hidden="true">▾</span>Quick actions</button></div>
+      <div class="side-body quick-grid" id="actionsBody">
+        <button class="button" id="citeBtn">＋ Citation</button>
+        <button class="button" id="bibBtn">Import .bib</button>
+        <button class="button" id="imageBtn">＋ Image</button>
+        <button class="button" id="downloadBtn">⇩ Download</button>
+      </div>
+    </section>
     <div class="separator"></div>
-    <div class="side-heading">Writing setup</div>
-    <div class="side-note">A lightweight research editor built around plain Markdown, portable citations, and your existing GitHub workflow.</div>
-    <div class="privacy-note">Your draft stays in this browser until you download it or choose to save it to GitHub. Grammarly works through your installed browser extension, if available; support in the Markdown text area depends on the browser and extension.</div>
+    <section class="side-section" data-section="setup">
+      <div class="side-heading"><button class="side-toggle" id="setupHeading" aria-expanded="true" aria-controls="setupBody"><span class="chevron" aria-hidden="true">▾</span>Writing setup</button></div>
+      <div class="side-body" id="setupBody">
+        <div class="side-note">A lightweight research editor built around plain Markdown, portable citations, and your existing GitHub workflow.</div>
+        <div class="privacy-note">Your draft stays in this browser until you download it or choose to save it to GitHub. Grammarly works through your installed browser extension, if available; support in the Markdown text area depends on the browser and extension.</div>
+      </div>
+    </section>
   </aside>
   <main class="main">
     <div class="docbar">
@@ -297,7 +321,7 @@ const sampleSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="350
 // Browser storage. localStorage can be unavailable (private windows, blocked
 // site data) or full (large bibliographies), so every access is guarded.
 // ---------------------------------------------------------------------------
-const STORE = { draft: 'manumd-draft', bib: 'manumd-bib', bibName: 'manumd-bib-name', docName: 'manumd-doc-name', syncScroll: 'manumd-sync-scroll', github: 'manumd-github' };
+const STORE = { draft: 'manumd-draft', bib: 'manumd-bib', bibName: 'manumd-bib-name', docName: 'manumd-doc-name', syncScroll: 'manumd-sync-scroll', github: 'manumd-github', sidebar: 'manumd-sidebar' };
 // The GitHub token is kept in sessionStorage only: it survives a reload but
 // is cleared when the tab is closed, and is never written to localStorage.
 const SESSION_TOKEN = 'manumd-github-token';
@@ -2125,6 +2149,25 @@ previewPane.addEventListener('keydown', e => {
 preview.addEventListener('load', invalidateScrollMap, true); // images change heights
 window.addEventListener('resize', invalidateLineTops);
 $('syncBtn').onclick = () => setSyncScroll(!syncScroll);
+// Collapsible sidebar sections (issue #17). Which sections are closed is a
+// preference for this browser, kept in local storage.
+function setSectionOpen(section, open) {
+  const toggle = section.querySelector('.side-toggle');
+  toggle.setAttribute('aria-expanded', open);
+  $(toggle.getAttribute('aria-controls')).hidden = !open;
+  section.classList.toggle('collapsed', !open);
+}
+let closedSections;
+try { closedSections = JSON.parse(load(STORE.sidebar) || '[]'); } catch { closedSections = []; }
+if (!Array.isArray(closedSections)) closedSections = [];
+document.querySelectorAll('.side-section').forEach(section => {
+  setSectionOpen(section, !closedSections.includes(section.dataset.section));
+  section.querySelector('.side-toggle').onclick = () => {
+    setSectionOpen(section, section.classList.contains('collapsed'));
+    store(STORE.sidebar, JSON.stringify([...document.querySelectorAll('.side-section.collapsed')].map(s => s.dataset.section)));
+  };
+});
+
 $('outline').onclick = e => {
   const item = e.target.closest('[data-line]');
   if (item) goToHeading(item);
