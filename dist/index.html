@@ -68,7 +68,15 @@ a { color:#087eb5 }
 .preview code { font:12px ui-monospace,monospace; background:#f0f4f6; padding:2px 4px; border-radius:4px }
 .preview pre code { padding:0; background:transparent }
 .preview img { max-width:100%; border-radius:9px; border:1px solid #d8e1e8; display:block; margin:18px auto; box-shadow:0 8px 22px #173e5115 }
-.figure-caption { font:11px/1.5 Inter,system-ui,sans-serif; color:#6f818e; text-align:center; margin-top:-12px }
+.preview figure { margin:18px 0 }
+.preview figure img,.preview figure .missing-image { margin-bottom:10px }
+.preview figcaption,.preview caption { font:12px/1.55 Inter,system-ui,sans-serif; color:#354e5d; text-align:left }
+.preview caption { caption-side:top; padding-bottom:8px }
+.xref-title { font-weight:700 }
+.table-wrap { overflow:auto }
+.equation { display:flex; align-items:center; gap:14px }
+.equation > .math.display { flex:1; min-width:0 }
+.eq-number { font:12px Inter,system-ui,sans-serif; color:#526475; white-space:nowrap }
 .preview table { border-collapse:collapse; width:100%; font:12px Inter,system-ui,sans-serif }
 .preview td,.preview th { border:1px solid var(--line); padding:7px 9px; text-align:left }
 .preview th { background:#f2f6f8 }
@@ -317,7 +325,7 @@ td .block-editor { margin:0 }
 <div id="notice" class="notice hidden" role="status"></div>
 <script>
 // Sample content shown on first launch. Illustrative only.
-const sample=`# The airway virome in chronic lung disease\n\n**Working draft** · Updated 16 October 2026\n\n## Introduction\n\nLongitudinal metagenomic sequencing can reveal ecological changes that precede the emergence of established airway pathogens. Here we combine community profiling with targeted analysis of bacterial and viral populations to describe changes in the cystic fibrosis airway microbiome.\n\n> Draft text for demonstration. Replace this sample with a manuscript section or open an existing Markdown file.\n\n## Results\n\nThe pilot cohort showed a measurable shift in microbial community structure over time (**Figure 1**). The figure below is an example asset; add your own image files to preview manuscript figures in place.\n\n![Illustrative microbiome profile](figure-1.svg)\n\n*Figure 1. Example inline figure preview using the ManuMD colour palette.*\n\n## Discussion\n\nThis section can include a citation from a Paperpile-exported bibliography, for example [@Edwards2024]. Load a \`.bib\` file and use the citation picker to insert keys from your library.\n\n### Next steps\n\n- Add the cohort-specific results and sample counts.\n- Check figure paths before committing changes.\n- Review the final references and journal style.\n`;
+const sample=`# The airway virome in chronic lung disease\n\n**Working draft** · Updated 16 October 2026\n\n## Introduction\n\nLongitudinal metagenomic sequencing can reveal ecological changes that precede the emergence of established airway pathogens. Here we combine community profiling with targeted analysis of bacterial and viral populations to describe changes in the cystic fibrosis airway microbiome.\n\n> Draft text for demonstration. Replace this sample with a manuscript section or open an existing Markdown file.\n\n## Results\n\nThe pilot cohort showed a measurable shift in microbial community structure over time ([@fig:profile]). The figure below is an example asset; add your own image files to preview manuscript figures in place.\n\n![Community profile across four visits. Illustrative values, drawn in the ManuMD colour palette.](figure-1.svg){#fig:profile}\n\n## Discussion\n\nThis section can include a citation from a Paperpile-exported bibliography, for example [@Edwards2024]. Load a \`.bib\` file and use the citation picker to insert keys from your library.\n\n### Next steps\n\n- Add the cohort-specific results and sample counts.\n- Check figure paths before committing changes.\n- Review the final references and journal style.\n`;
 const sampleBib=`@article{Edwards2024,\n  author = {Edwards, Robert A. and colleagues},\n  title = {An example reference for the ManuMD demonstration},\n  journal = {Journal of Example Research},\n  year = {2024},\n  doi = {10.0000/example}\n}\n`;
 const sampleSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="350" viewBox="0 0 900 350"><rect width="900" height="350" rx="18" fill="#f7fafc"/><text x="48" y="44" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#173e51">Community profile across four visits</text><text x="48" y="69" font-family="Arial,sans-serif" font-size="12" fill="#657789">Illustrative values only · replace with your figure</text><g stroke="#d8e1e8" stroke-width="1"><path d="M80 105H850M80 160H850M80 215H850M80 270H850"/></g><g font-family="Arial,sans-serif" font-size="11" fill="#657789"><text x="39" y="109">100%</text><text x="48" y="164">75%</text><text x="48" y="219">50%</text><text x="48" y="274">25%</text><text x="118" y="302">Visit 1</text><text x="315" y="302">Visit 2</text><text x="512" y="302">Visit 3</text><text x="710" y="302">Visit 4</text></g><path d="M120 135 C205 145 250 205 335 184 S465 125 530 149 S660 221 730 199 S800 166 830 171" fill="none" stroke="#03a9f4" stroke-width="5" stroke-linecap="round"/><path d="M120 224 C205 208 260 166 335 179 S465 223 530 208 S660 150 730 160 S800 190 830 182" fill="none" stroke="#8ed7c4" stroke-width="5" stroke-linecap="round"/><path d="M120 258 C205 251 260 247 335 244 S465 238 530 242 S660 247 730 240 S800 237 830 232" fill="none" stroke="#ffbf47" stroke-width="4" stroke-linecap="round"/><g fill="#03a9f4"><circle cx="120" cy="135" r="6"/><circle cx="335" cy="184" r="6"/><circle cx="530" cy="149" r="6"/><circle cx="730" cy="199" r="6"/><circle cx="830" cy="171" r="6"/></g><g font-family="Arial,sans-serif" font-size="11" fill="#526475"><rect x="615" y="89" width="9" height="9" rx="3" fill="#03a9f4"/><text x="630" y="98">Pseudomonas</text><rect x="729" y="89" width="9" height="9" rx="3" fill="#8ed7c4"/><text x="744" y="98">Other taxa</text></g></svg>`;
 
@@ -642,10 +650,36 @@ function parseCitationItems(content) {
   return items.some(x => !x) ? null : items;
 }
 
+// pandoc-crossref labels: fig:, tbl:, eq: and sec:. "@Fig:x" capitalises
+// the prefix. These are cross-references, never citations.
+const XREF_KEY = /^(fig|tbl|eq|sec):/i;
+
+// A cross-reference is a placeholder until the preview is rendered, because
+// a reference can come before the figure it names (see numberCrossrefs).
+// Each label keeps its own case ("Fig:" capitalises the prefix) and a
+// leading "-" when its prefix is suppressed.
+function crossrefHtml(items) {
+  const refs = items.map(x => (x.suppress ? '-' : '') + x.key);
+  return `<span class="xref" data-refs="${esc(refs.join(' '))}">${esc(items.map(x => x.key).join('; '))}</span>`;
+}
+
 function renderCitation(content, cited) {
   const items = parseCitationItems(content);
   if (!items) return null;
+  // A prefix written in the brackets replaces pandoc-crossref's own:
+  // [Panel @fig:1] is "Panel 1".
+  const xref = ({ prefix, suppress, key, locator }) => (prefix ? esc(prefix) + ' ' : '') + crossrefHtml([{ key, suppress: suppress || !!prefix }]) + (locator ? ', ' + esc(locator) : '');
+  if (items.every(x => XREF_KEY.test(x.key))) {
+    const parts = [];
+    for (const x of items) {
+      const plain = !x.prefix && !x.locator;
+      if (plain && parts.length && parts[parts.length - 1].group) parts[parts.length - 1].group.push(x);
+      else parts.push(plain ? { group: [x] } : { html: xref(x) });
+    }
+    return parts.map(p => p.html || crossrefHtml(p.group)).join(', ');
+  }
   const html = items.map(({ prefix, suppress, key, locator }) => {
+    if (XREF_KEY.test(key)) return xref({ prefix, suppress, key, locator });
     cited.push(key);
     const r = library.byKey.get(key);
     if (!r) return `<span class="cite-missing" title="Not in the loaded bibliography">?${esc(key)}</span>`;
@@ -688,7 +722,7 @@ function renderInline(text, cited) {
   // followed by a non-space, the closing $ preceded by a non-space and not
   // followed by a digit (so "$100 and $1" is not math). \$ is a literal $.
   const math = s => s
-    .replace(/(?<!\\)\$\$([\s\S]+?)\$\$/g, (m, tex) => hold(mathHtml(plain(tex), true), plain(m)))
+    .replace(/(?<!\\)\$\$([\s\S]+?)\$\$(?:[ \t]*\{#(eq:[^\s{}]+)[^{}\n]*\})?/g, (m, tex, label) => hold(equationHtml(mathHtml(plain(tex), true), label && plain(label)), plain(m)))
     .replace(/(?<![\\$])\$(?![\s$])((?:\\.|[^$\\])+?)(?<!\s)\$(?!\d)/g, (m, tex) => hold(mathHtml(plain(tex), false), plain(m)))
     .replace(/\\\$/g, '$');
 
@@ -696,7 +730,8 @@ function renderInline(text, cited) {
   t = t.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (m, __, code) => hold(`<code>${esc(code.trim())}</code>`, m));
 
   // Images: session images by path or file name, otherwise web URLs.
-  t = t.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)(\{[^{}\n]*\})?/g, (m, alt, src, attrs) => {
+  // The text may hold bracketed citations: ![Data from [@Smith2024]](a.png).
+  t = t.replace(/!\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)(\{[^{}\n]*\})?/g, (m, alt, src, attrs) => {
     alt = plain(alt);
     src = plain(src);
     let decoded = src;
@@ -735,6 +770,9 @@ function renderInline(text, cited) {
     return html ? hold(html, whole) : whole;
   });
 
+  // pandoc-crossref references in the text, without brackets: @fig:1, @Fig:1.
+  t = t.replace(/(^|[^\w@])(-?)@((?:fig|tbl|eq|sec|Fig|Tbl|Eq|Sec):[\w:.#$%&+?<>~/-]*\w)/g, (m, before, suppress, key) => before + hold(crossrefHtml([{ key, suppress: !!suppress }]), m.slice(before.length)));
+
   // Tokens can nest (math or code inside a link label), so restore until none remain.
   let html = renderEmphasis(esc(t));
   for (let depth = 0; depth < 5 && html.includes('\u0000'); depth++) html = html.replace(/\u0000(\d+)\u0000/g, (_, n) => tokens[n]);
@@ -748,6 +786,12 @@ function mathHtml(tex, display) {
   return `<span class="math${display ? ' display' : ''}" data-tex="${esc(tex.trim())}">${esc(delim + tex + delim)}</span>`;
 }
 
+// Display math labelled {#eq:x}: pandoc-crossref numbers it on the right.
+function equationHtml(math, label) {
+  if (!label) return math;
+  return `<span class="equation" data-label="${esc(label)}" data-anchor="${esc(slug(label))}">${math}<span class="eq-number"></span></span>`;
+}
+
 function renderEmphasis(t) {
   return t
     .replace(/\*\*(?=\S)(.+?)\*\*/g, '<strong>$1</strong>')
@@ -755,6 +799,46 @@ function renderEmphasis(t) {
     .replace(/\*(?=\S)(.+?)\*/g, '<em>$1</em>')
     .replace(/(^|\W)_(?=\S)(.+?)_(?!\w)/g, '$1<em>$2</em>')
     .replace(/~~(?=\S)(.+?)~~/g, '<del>$1</del>');
+}
+
+function isTableStart(lines, n) {
+  return n + 1 < lines.length && lines[n].includes('|') && lines[n + 1].includes('|') && /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/.test(lines[n + 1]);
+}
+
+// A line that begins a block of its own (a heading, list, quote, fence,
+// rule, display math or table), so a caption ends before it.
+function startsBlock(lines, n) {
+  const line = lines[n];
+  return /^\s*(#{1,6}\s|>|```|~~~|:{3,}|\$\$|([-*+]|\d+[.)])\s)/.test(line) || /^\s*([-*_])(\s*\1){2,}\s*$/.test(line) || isTableStart(lines, n);
+}
+
+const TABLE_CAPTION = /^\s*(?:[Tt]able)?:\s/;
+
+// A table caption's attributes for the table's block, and its <caption>.
+// A {#tbl:x} label at the end of the caption is pandoc-crossref's.
+// A caption after the table maps to its own source lines (lineAttr), so
+// editing it in the preview edits the caption.
+function tableCaption(caption, inline, lineAttr) {
+  if (!caption) return { attrs: '', html: '' };
+  let text = caption.text.replace(TABLE_CAPTION, '').trim();
+  const attrs = text.match(/\s*\{([^{}]*)\}$/);
+  const id = attrs && attrs[1].match(/#([^\s}]+)/);
+  if (attrs) text = text.slice(0, attrs.index);
+  return {
+    attrs: id ? ` data-anchor="${esc(slug(id[1]))}"${/^tbl:/.test(id[1]) ? ` data-label="${esc(id[1])}"` : ''}` : '',
+    html: `<caption${lineAttr}><span class="xref-title"></span>${inline(text)}</caption>`
+  };
+}
+
+// Pandoc makes an image that is alone in its paragraph into a figure, with
+// the image's text as its caption (the figure legend). A {#fig:x} label is
+// pandoc-crossref's, which numbers the figure.
+const FIGURE = /^!\[((?:[^\[\]]|\[[^\[\]]*\])+)\]\(\s*<?[^)\s>]+>?(?:\s+"[^"]*")?\s*\)(\{[^{}\n]*\})?$/;
+
+function figureHtml(text, fig, inline, lineAttr) {
+  const id = fig[2] && fig[2].match(/#([^\s}]+)/);
+  const label = id && /^fig:/.test(id[1]) ? ` data-label="${esc(id[1])}"` : '';
+  return `<figure${lineAttr}${label}>${inline(text)}<figcaption><span class="xref-title"></span>${inline(fig[1])}</figcaption></figure>`;
 }
 
 function splitRow(line) {
@@ -825,9 +909,16 @@ function renderMarkdown(md, cited, top = true) {
   let para = [], paraLine = 0;
   let list = null; // 'ul' | 'ol'
   let quote = [], quoteLine = 0;
+  let caption = null; // a table caption waiting for its table
   let i = 0;
 
-  const flushPara = () => { if (para.length) { html += `<p${at(paraLine)}>${inline(para.join(' '))}</p>`; para = []; } };
+  const flushPara = () => {
+    if (!para.length) return;
+    const text = para.join(' ');
+    const fig = text.match(FIGURE);
+    html += fig ? figureHtml(text, fig, inline, at(paraLine)) : `<p${at(paraLine)}>${inline(text)}</p>`;
+    para = [];
+  };
   const endList = () => { if (list) { html += `</${list}>`; list = null; } };
   const flushQuote = () => { if (quote.length) { html += `<blockquote${at(quoteLine)}>${renderMarkdown(quote.join('\n'), cited, false)}</blockquote>`; quote = []; } };
   const flushAll = () => { flushPara(); endList(); flushQuote(); };
@@ -855,9 +946,11 @@ function renderMarkdown(md, cited, top = true) {
         const body = [line.replace(/^\s*\$\$/, ''), ...lines.slice(i + 1, close), lines[close].slice(0, closeAt)].join('\n');
         // data-end marks the closing line, which text after $$ may share
         // with the next paragraph (see blockSourceRange).
-        html += `<div class="math-block"${at(i)}${top ? ` data-end="${close}"` : ''}>${mathHtml(body, true)}</div>`;
+        let rest = lines[close].slice(closeAt + 2).trim();
+        const label = rest.match(/^\{#(eq:[^\s{}]+)[^{}]*\}/);
+        if (label) rest = rest.slice(label[0].length).trim();
+        html += `<div class="math-block"${at(i)}${top ? ` data-end="${close}"` : ''}>${equationHtml(mathHtml(body, true), label && label[1])}</div>`;
         // Text after the closing $$ on the same line starts the next paragraph.
-        const rest = lines[close].slice(closeAt + 2).trim();
         if (rest) { para = [rest]; paraLine = close; }
         i = close;
         continue;
@@ -900,7 +993,9 @@ function renderMarkdown(md, cited, top = true) {
       const text = attrs ? h[2].slice(0, attrs.index) : h[2];
       const explicit = attrs && attrs[1].match(/#([^\s}]+)/);
       const anchor = explicit ? explicit[1] : slug(text.replace(/[*_`]/g, ''));
-      html += `<h${level}${at(i)} data-anchor="${esc(slug(anchor))}">${inline(text)}</h${level}>`;
+      const label = explicit && /^sec:/.test(explicit[1]) ? ` data-label="${esc(explicit[1])}"` : '';
+      const unnumbered = attrs && /(^|\s)(-|\.unnumbered)(?=\s|$)/.test(attrs[1]) ? ' data-unnumbered="1"' : '';
+      html += `<h${level}${at(i)} data-anchor="${esc(slug(anchor))}"${label}${unnumbered}>${inline(text)}</h${level}>`;
       continue;
     }
 
@@ -916,19 +1011,44 @@ function renderMarkdown(md, cited, top = true) {
       continue;
     }
 
+    // A table caption before the table: "Table: ..." or ": ...", then the
+    // table, after at most one blank line.
+    if (!para.length && TABLE_CAPTION.test(line)) {
+      let end = i;
+      while (end + 1 < lines.length && lines[end + 1].trim() && !startsBlock(lines, end + 1)) end++;
+      const next = isTableStart(lines, end + 1) ? end + 1 : !lines[end + 1]?.trim() && isTableStart(lines, end + 2) ? end + 2 : -1;
+      if (next > 0) {
+        flushAll();
+        caption = { text: lines.slice(i, end + 1).join(' '), line: i };
+        i = next - 1;
+        continue;
+      }
+    }
+
     // Tables: a header row followed by a |---|---| delimiter row.
-    if (line.includes('|') && i + 1 < lines.length && lines[i + 1].includes('|') && /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/.test(lines[i + 1])) {
+    if (isTableStart(lines, i)) {
       flushAll();
-      const start = i;
+      const start = caption ? caption.line : i;
       const header = splitRow(line);
       const align = splitRow(lines[i + 1]).map(c => c.endsWith(':') ? (c.startsWith(':') ? 'center' : 'right') : 'left');
       const cell = (tag, c, n) => `<${tag} style="text-align:${align[n] || 'left'}">${inline(c)}</${tag}>`;
       let table = `<thead><tr>${header.map((c, n) => cell('th', c, n)).join('')}</tr></thead><tbody>`;
-      for (i += 2; i < lines.length && lines[i].includes('|') && lines[i].trim(); i++) {
+      // Rows end at a blank line, or at a caption even if it holds a | (as in $|x|$).
+      for (i += 2; i < lines.length && lines[i].includes('|') && lines[i].trim() && !TABLE_CAPTION.test(lines[i]); i++) {
         table += `<tr${at(i)}>${splitRow(lines[i]).map((c, n) => cell('td', c, n)).join('')}</tr>`;
       }
+      // Or a caption after it, again after at most one blank line.
+      const after = TABLE_CAPTION.test(lines[i] || '') ? i : !(lines[i] || '').trim() && TABLE_CAPTION.test(lines[i + 1] || '') ? i + 1 : -1;
+      if (!caption && after > 0) {
+        let end = after;
+        while (end + 1 < lines.length && lines[end + 1].trim() && !startsBlock(lines, end + 1)) end++;
+        caption = { text: lines.slice(after, end + 1).join(' '), after };
+        i = end + 1;
+      }
       i--;
-      html += `<div style="overflow:auto"${at(start)}><table>${table}</tbody></table></div>`;
+      const cap = tableCaption(caption, inline, caption && caption.after !== undefined ? at(caption.after) : '');
+      html += `<div class="table-wrap"${at(start)}${cap.attrs}><table>${cap.html}${table}</tbody></table></div>`;
+      caption = null;
       continue;
     }
 
@@ -1115,9 +1235,10 @@ function alignPreviewToSource() {
   if (!splitVisible()) return;
   const line = source.value.slice(0, source.selectionStart).split('\n').length - 1;
   let block = null;
+  // The last block starting at or before the line. Not always the last in
+  // page order: a table's caption is shown above rows that come before it.
   for (const el of preview.querySelectorAll('[data-line]')) {
-    if (+el.dataset.line <= line) block = el;
-    else break;
+    if (+el.dataset.line <= line && (!block || +el.dataset.line >= +block.dataset.line)) block = el;
   }
   if (!block) return;
   const tops = sourceLineTops();
@@ -1274,6 +1395,7 @@ function updatePreview() {
       : html + `<section class="references"><h2>References</h2>${list}</section>`;
   }
   preview.innerHTML = html;
+  const missingRefs = numberCrossrefs(text);
   invalidateScrollMap();
   renderOutline();
   typesetMath();
@@ -1282,9 +1404,128 @@ function updatePreview() {
   $('wordCount').textContent = `${words} word${words === 1 ? '' : 's'}`;
   $('charCount').textContent = `${source.value.length} characters`;
   const citeStatus = $('citeStatus');
-  citeStatus.className = missing.length ? 'status-warn' : '';
-  citeStatus.textContent = missing.length ? `${missing.length} citation key${missing.length === 1 ? '' : 's'} not in bibliography` : '';
-  citeStatus.title = missing.join(', ');
+  citeStatus.className = missing.length || missingRefs.length ? 'status-warn' : '';
+  citeStatus.textContent = [
+    missing.length ? `${missing.length} citation key${missing.length === 1 ? '' : 's'} not in bibliography` : '',
+    missingRefs.length ? `${missingRefs.length} cross-reference${missingRefs.length === 1 ? '' : 's'} not found` : ''
+  ].filter(Boolean).join(' · ');
+  citeStatus.title = [...missing, ...missingRefs].join(', ');
+}
+
+// pandoc-crossref settings from the front matter, with its defaults. A
+// prefix is a scalar or a [singular, plural] list.
+function crossrefOptions(md) {
+  const fm = md.replace(/\r/g, '').match(/^---\n([\s\S]*?)\n(?:---|\.\.\.)[ \t]*(?:\n|$)/);
+  const yaml = fm ? fm[1] : '';
+  const field = key => {
+    const m = yaml.match(new RegExp(`^${key}:[ \\t]*(.*)$`, 'm'));
+    return m ? m[1].trim() : null;
+  };
+  const words = (key, fallback) => {
+    const v = field(key);
+    if (v === null) return fallback;
+    const list = v.startsWith('[') ? v.replace(/^\[|\][ \t]*(#.*)?$/g, '').split(',').map(yamlScalar) : [yamlScalar(v)];
+    return [list[0], list[1] || list[0]];
+  };
+  const one = (key, fallback) => field(key) === null ? fallback : yamlScalar(field(key));
+  return {
+    // Numbered captions only when the paper uses pandoc-crossref: it names
+    // the filter or one of its settings, or a reference uses a label. Plain
+    // Pandoc shows a figure's caption as written.
+    named: /pandoc-crossref|^(fig|tbl|eqn|sec)Prefix:|^(figure|table)Title:|^titleDelim:/m.test(yaml),
+    fig: { prefix: words('figPrefix', ['fig.', 'figs.']), title: one('figureTitle', 'Figure') },
+    tbl: { prefix: words('tblPrefix', ['tbl.', 'tbls.']), title: one('tableTitle', 'Table') },
+    eq: { prefix: words('eqnPrefix', ['eq.', 'eqns.']) },
+    sec: { prefix: words('secPrefix', ['sec.', 'secs.']) },
+    delim: one('titleDelim', ':')
+  };
+}
+
+// Numbers labelled figures, tables, equations and sections as
+// pandoc-crossref does, in the order they appear, and fills in the
+// references to them. Returns the labels that were referenced but not found.
+function numberCrossrefs(md) {
+  const opts = crossrefOptions(md);
+  const refs = [...preview.querySelectorAll('.xref')];
+  const on = opts.named || refs.length > 0;
+  const numbers = new Map();
+  const count = { fig: 0, tbl: 0, eq: 0 };
+  for (const el of preview.querySelectorAll('figure[data-label], [data-label^="tbl:"], .equation[data-label]')) {
+    const label = el.dataset.label, kind = label.slice(0, label.indexOf(':'));
+    const n = ++count[kind];
+    if (!numbers.has(label)) numbers.set(label, String(n));
+    if (!on) continue;
+    if (kind === 'eq') el.querySelector('.eq-number').textContent = `(${n})`;
+    else el.querySelector('.xref-title').textContent = `${opts[kind].title} ${n}${opts.delim} `;
+  }
+  // Sections are numbered by their place among the headings, as in 2.1.
+  const levels = [];
+  for (const h of preview.querySelectorAll(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6')) {
+    if (h.dataset.unnumbered) continue;
+    const level = +h.tagName[1];
+    levels.length = level;
+    for (let k = 0; k < level - 1; k++) levels[k] = levels[k] || 0;
+    levels[level - 1] = (levels[level - 1] || 0) + 1;
+    if (h.dataset.label && !numbers.has(h.dataset.label)) numbers.set(h.dataset.label, levels.join('.'));
+  }
+  const missing = [];
+  const link = (label, text) => {
+    const a = document.createElement('a');
+    a.href = '#' + label;
+    // The exact label, not its slug: "fig:a" and a heading "{#figa}" share one.
+    a.dataset.xref = label;
+    a.textContent = text;
+    return a;
+  };
+  for (const el of refs) {
+    // References of one kind, case and suppression share a prefix, and
+    // three or more consecutive numbers become a range: "figs. 1-3".
+    const runs = [];
+    for (const raw of el.dataset.refs.split(' ')) {
+      const suppress = raw.startsWith('-'), key = raw.replace(/^-/, '');
+      const label = key.replace(XREF_KEY, k => k.toLowerCase());
+      const kind = label.slice(0, label.indexOf(':')), cap = /^[A-Z]/.test(key);
+      const last = runs[runs.length - 1];
+      if (last && last.kind === kind && last.suppress === suppress && last.cap === cap) last.labels.push(label);
+      else runs.push({ kind, suppress, cap, labels: [label] });
+    }
+    const parts = [];
+    for (const run of runs) {
+      if (parts.length) parts.push(', ');
+      if (!run.suppress) {
+        let prefix = opts[run.kind].prefix[run.labels.length > 1 ? 1 : 0];
+        if (run.cap) prefix = prefix.replace(/(^|\s)\S/g, c => c.toUpperCase());
+        if (prefix) parts.push(prefix + '\u00a0');
+      }
+      const items = [];
+      for (const label of run.labels) {
+        const n = numbers.get(label);
+        const prev = items[items.length - 1];
+        if (n && /^\d+$/.test(n) && prev && prev.to && +n === +prev.to.n + 1) prev.to = { label, n };
+        else items.push({ label, n, to: n && /^\d+$/.test(n) ? { label, n } : null });
+      }
+      items.forEach((item, k) => {
+        if (k) parts.push(', ');
+        if (!item.n) {
+          missing.push(item.label);
+          const span = document.createElement('span');
+          span.className = 'cite-missing';
+          span.title = 'No figure, table, equation or section has this label';
+          span.textContent = `¿${item.label}?`;
+          parts.push(span);
+          return;
+        }
+        const span = item.to && +item.to.n - +item.n;
+        if (span >= 2) parts.push(link(item.label, item.n), '-', link(item.to.label, item.to.n));
+        else {
+          parts.push(link(item.label, item.n));
+          if (span === 1) parts.push(', ', link(item.to.label, item.to.n));
+        }
+      });
+    }
+    el.replaceChildren(...parts);
+  }
+  return [...new Set(missing)];
 }
 
 function schedulePreview() {
@@ -2219,10 +2460,11 @@ $('outline').addEventListener('mousedown', e => {
   if (e.target.closest('[data-line]')) e.preventDefault();
 });
 preview.addEventListener('click', e => {
-  const link = e.target.closest('a[data-fragment]');
+  const link = e.target.closest('a[data-fragment], a[data-xref]');
   if (!link) return;
   e.preventDefault();
-  const target = preview.querySelector(`[data-anchor="${CSS.escape(link.dataset.fragment)}"]`);
+  const target = link.dataset.xref ? preview.querySelector(`[data-label="${CSS.escape(link.dataset.xref)}"]`)
+    : preview.querySelector(`[data-anchor="${CSS.escape(link.dataset.fragment)}"]`);
   if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
