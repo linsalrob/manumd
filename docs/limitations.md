@@ -19,8 +19,8 @@ ManuMD is an early prototype. These are the main things it doesn't do, or does d
 ## Preview
 
 - **A subset of Markdown.** Nested lists, footnotes, definition lists, task lists, bracketed spans and raw HTML are not formatted. They stay in the file unchanged, and Pandoc formats them as usual. See [Markdown and equations](markdown.md).
-- **No figure captions or numbering.** Images are shown inline. Attributes such as `{#fig:1 width=100%}` size the image and make it a link target, but the caption text isn't shown and figures aren't numbered. Pandoc, with pandoc-crossref for numbering, does both when it makes the final document.
-- **pandoc-crossref references.** A bracketed reference such as `[@fig:1]` is read as a citation key and reported as missing; a bare `@fig:1` is shown as text. To jump to a figure in the preview, use a link such as `[Figure 1](#fig:1)`.
+- **Cross-references: the common cases.** The preview numbers figures, tables, equations and sections, and formats references to them, with pandoc-crossref's default style and a few of its settings. It doesn't do subfigures, chapter-based numbering, `cref` style, lists of figures or tables, or code-listing labels. See [Cross-references](markdown.md#cross-references).
+- **In-text citations.** Only bracketed citations, such as `[@Smith2024]`, are formatted. An in-text citation such as `@Smith2024` is shown as text. (`@fig:1` and the other cross-references are formatted.)
 - **Simple citation style.** The preview uses a fixed author–year style. Journal styles (CSL) are applied by Pandoc.
 - **KaTeX, not LaTeX.** Most LaTeX math works, but not every package. Equations need an internet connection the first time.
 - **Front matter as text.** The YAML front matter is shown as text. ManuMD reads only its `bibliography:` field.

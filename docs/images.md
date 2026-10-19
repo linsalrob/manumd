@@ -18,6 +18,18 @@ The preview shows an image from one of three places, in this order:
 
 A relative path that matches none of them shows a placeholder, **Image not loaded**, with the path.
 
+## Figure legends
+
+An image on its own, in a paragraph by itself, is a **figure**. The text in square brackets is its legend, shown under the image, as Pandoc does when it makes the paper:
+
+```markdown
+![**Figure 1.** Entropy across the genome. Bars show the mean of 20 samples.](images/fig1_entropy.png)
+```
+
+The legend can use bold, italics, equations and citations. An image in the middle of a sentence, or with empty square brackets, is not a figure and has no legend.
+
+To number figures automatically and refer to them as `@fig:entropy`, use pandoc-crossref labels. See [Cross-references](markdown.md#cross-references).
+
 ## Add image files from your computer
 
 Click **＋ Image** or **Add image files** and choose one or more images. They appear in the preview wherever the Markdown refers to them, matched by path and then by file name. So `images/fig1.png` in the Markdown matches a file you added called `fig1.png`.
