@@ -1509,8 +1509,10 @@ function frontMatterBibliography(md) {
     value = yamlScalar(value);
   }
   if (!value) {
-    // Block list on the following lines; the field may end in a comment.
-    const item = fm[1].slice(field.index + field[0].length).match(/^\n[ \t]+-[ \t]*(.+)/);
+    // Block list on the following lines, indented or not (YAML allows
+    // "bibliography:\n- refs.bib"); the field may end in a comment, and
+    // blank or comment lines may come before the first item.
+    const item = fm[1].slice(field.index + field[0].length).match(/^\n(?:[ \t]*(?:#.*)?\n)*[ \t]*-[ \t]+(.+)/);
     value = item ? yamlScalar(item[1]) : '';
   }
   return value || null;
