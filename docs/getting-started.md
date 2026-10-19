@@ -12,7 +12,7 @@ You can also run ManuMD without the hosted site: download [`dist/index.html`](ht
 
 You have three ways to start:
 
-- **Start a new file.** Click **＋** next to **Draft files** in the left-hand panel and give the file a name, such as `paper.md`.
+- **Start a new file.** Click **＋** next to **Draft files**, at the bottom of the left-hand panel, and give the file a name, such as `paper.md`.
 - **Open a file from your computer.** Click **Open .md** in the top bar and choose a Markdown file.
 - **Load a file from GitHub.** Click **↗ GitHub**. See [Working with GitHub](github.md).
 
