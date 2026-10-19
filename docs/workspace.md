@@ -14,6 +14,7 @@ ManuMD's screen has a top bar, a left-hand panel, the editor in the middle, a ri
 ## Left-hand panel
 
 - **Draft files:** the current Markdown file, the bibliography and any images. **＋** starts a new, empty Markdown file.
+- **Outline:** the paper's headings, down to level 3. Click one to jump to it. See [Jumping to a section](editing.md#jumping-to-a-section).
 - **Quick actions:**
   - **＋ Citation** opens the citation picker.
   - **Import .bib** loads a BibTeX file.
@@ -50,4 +51,4 @@ The status bar shows:
 ## Narrow screens
 
 - **Narrower than about 1100 pixels:** the right-hand panel is hidden.
-- **Phone width (narrower than about 760 pixels):** the left-hand panel is hidden too, and the editor fills the screen. Split and Edit views show the Markdown, and Preview view shows the preview. Use the top bar for GitHub, opening and saving. The GitHub dialog scrolls, so its buttons can always be reached.
+- **Phone width (narrower than about 760 pixels):** the left-hand panel, with the outline, is hidden too, and the editor fills the screen. Split and Edit views show the Markdown, and Preview view shows the preview. Use the top bar for GitHub, opening and saving. The GitHub dialog scrolls, so its buttons can always be reached.
