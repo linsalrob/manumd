@@ -128,6 +128,8 @@ a { color:#087eb5 }
 .layout.view-edit .preview-pane { display:none }
 .layout.view-edit .source-pane { border-right:0 }
 .layout.view-preview .source-pane { display:none }
+.layout.view-focus .sidebar, .layout.view-focus .inspector { display:none }
+.layout.view-focus .main { grid-column:1 / -1 }
 .file-list li:focus-visible { outline:3px solid var(--gold); outline-offset:-3px }
 .file-list li.static { cursor:default }
 .file-list li.static:hover { background:transparent }
@@ -254,6 +256,7 @@ td .block-editor { margin:0 }
         <button class="on" id="splitTab" data-view="split" aria-pressed="true">Split</button>
         <button id="editTab" data-view="edit" aria-pressed="false">Edit</button>
         <button id="previewTab" data-view="preview" aria-pressed="false">Preview</button>
+        <button id="focusTab" data-view="focus" aria-pressed="false">Focus</button>
       </div>
     </div>
     <div class="toolbar">
@@ -2447,7 +2450,7 @@ function pruneImageCache() {
 // ---------------------------------------------------------------------------
 function setView(view) {
   finishBlockEdit(true); // an open block edit is applied before switching
-  layout.classList.remove('view-split', 'view-edit', 'view-preview');
+  layout.classList.remove('view-split', 'view-edit', 'view-preview', 'view-focus');
   layout.classList.add('view-' + view);
   invalidateLineTops();
   document.querySelectorAll('.tabs button').forEach(b => {
