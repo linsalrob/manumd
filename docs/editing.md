@@ -2,11 +2,12 @@
 
 ## Views
 
-The **Split**, **Edit** and **Preview** buttons above the text choose the view:
+The **Split**, **Edit**, **Preview** and **Focus** buttons above the text choose the view:
 
 - **Split:** Markdown on the left, preview on the right.
 - **Edit:** Markdown only, for distraction-free writing.
 - **Preview:** the formatted paper only. You can still edit it, block by block. See [Editing in the preview](#editing-in-the-preview).
+- **Focus:** the side panels are hidden, leaving the manuscript as the main view while keeping the current editor layout in the middle.
 
 The preview updates as you type.
 

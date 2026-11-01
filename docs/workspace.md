@@ -28,7 +28,7 @@ The panel has four sections, from top to bottom. Click a section's heading, or {
 
 Above the text are:
 
-- **Split**, **Edit** and **Preview:** choose the view. See [Views](editing.md#views).
+- **Split**, **Edit**, **Preview** and **Focus:** choose the view. See [Views](editing.md#views).
 - **Formatting buttons:** bold, italic, heading, quote, code and link. See [Formatting](editing.md#formatting).
 - **⇅ Sync scroll:** keeps the two panes scrolled together in Split view.
 - **＋ Citation:** opens the citation picker.
