@@ -128,6 +128,9 @@ a { color:#087eb5 }
 .layout.view-edit .preview-pane { display:none }
 .layout.view-edit .source-pane { border-right:0 }
 .layout.view-preview .source-pane { display:none }
+.layout.view-focus { grid-template-columns:1fr }
+.layout.view-focus .sidebar, .layout.view-focus .inspector { display:none }
+.layout.view-focus .main { grid-column:1 / -1 }
 .file-list li:focus-visible { outline:3px solid var(--gold); outline-offset:-3px }
 .file-list li.static { cursor:default }
 .file-list li.static:hover { background:transparent }
@@ -254,6 +257,7 @@ td .block-editor { margin:0 }
         <button class="on" id="splitTab" data-view="split" aria-pressed="true">Split</button>
         <button id="editTab" data-view="edit" aria-pressed="false">Edit</button>
         <button id="previewTab" data-view="preview" aria-pressed="false">Preview</button>
+        <button id="focusTab" data-view="focus" aria-pressed="false">Focus</button>
       </div>
     </div>
     <div class="toolbar">
@@ -2445,13 +2449,24 @@ function pruneImageCache() {
 // ---------------------------------------------------------------------------
 // Views and event wiring
 // ---------------------------------------------------------------------------
+let paneView = 'split';
+let focusActive = false;
+
 function setView(view) {
   finishBlockEdit(true); // an open block edit is applied before switching
-  layout.classList.remove('view-split', 'view-edit', 'view-preview');
-  layout.classList.add('view-' + view);
+  if (view === 'focus') {
+    focusActive = true;
+    layout.classList.add('view-focus');
+    if (!layout.classList.contains('view-' + paneView)) layout.classList.add('view-' + paneView);
+  } else {
+    focusActive = false;
+    paneView = view;
+    layout.classList.remove('view-focus', 'view-split', 'view-edit', 'view-preview');
+    layout.classList.add('view-' + paneView);
+  }
   invalidateLineTops();
   document.querySelectorAll('.tabs button').forEach(b => {
-    const on = b.dataset.view === view;
+    const on = view === 'focus' ? b.dataset.view === 'focus' : b.dataset.view === paneView;
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on);
   });
