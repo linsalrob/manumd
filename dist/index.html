@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#173e51">
 <link rel="icon" type="image/svg+xml" href="favicon.svg"><title>ManuMD — research writing, in Markdown</title>
 <style>
-:root { --navy:#173e51; --ink:#172433; --muted:#657789; --paper:#fff; --wash:#edf2f6; --line:#d8e1e8; --cyan:#03a9f4; --mint:#8ed7c4; --gold:#ffbf47; --soft:#f7fafc; --shadow:0 12px 36px #173e5110 }
+:root { --navy:#173e51; --ink:#172433; --muted:#657789; --paper:#fff; --wash:#edf2f6; --line:#d8e1e8; --cyan:#03a9f4; --mint:#8ed7c4; --gold:#ffbf47; --soft:#f7fafc; --shadow:0 12px 36px #173e5110; --source-font-size:13px; --preview-font-size:15px }
 * { box-sizing:border-box }
 body { margin:0; background:var(--wash); color:var(--ink); font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif }
 button,input,textarea { font:inherit }
@@ -22,6 +22,8 @@ a { color:#087eb5 }
 .dot { width:7px; height:7px; border-radius:50%; background:var(--mint) }
 .button { border:1px solid var(--line); background:white; color:var(--ink); border-radius:8px; padding:8px 11px; font-weight:650; transition:.15s }
 .button:hover { border-color:#8ca4b4; background:#fbfdff }
+.button:disabled { opacity:.5; cursor:not-allowed; }
+.button:disabled:hover { border-color:var(--line); background:white }
 .button.primary { background:var(--cyan); color:white; border-color:var(--cyan) }
 .button.primary:hover { background:#008ccc }
 .button.dark { background:#274e61; border-color:#567486; color:white }
@@ -56,9 +58,9 @@ a { color:#087eb5 }
 .source-pane,.preview-pane { min-width:0; overflow:auto }
 .source-pane { border-right:1px solid var(--line); display:flex; flex-direction:column }
 .pane-label { height:31px; padding:7px 15px; border-bottom:1px solid #edf1f4; color:#7a8b98; font-size:10px; letter-spacing:.1em; font-weight:800; text-transform:uppercase; background:#fcfdfe }
-.source { resize:none; flex:1; width:100%; border:0; outline:none!important; padding:22px 24px 40px; background:white; color:#263c4b; font:13px/1.85 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; tab-size:2; white-space:pre-wrap }
+.source { resize:none; flex:1; width:100%; border:0; outline:none!important; padding:22px 24px 40px; background:white; color:#263c4b; font:var(--source-font-size)/1.85 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; tab-size:2; white-space:pre-wrap }
 .source:focus { outline:none }
-.preview { max-width:760px; margin:0 auto; padding:28px 32px 54px; color:#263746; font:15px/1.75 Georgia,"Times New Roman",serif }
+.preview { max-width:760px; margin:0 auto; padding:28px 32px 54px; color:#263746; font:var(--preview-font-size)/1.75 Georgia,"Times New Roman",serif }
 .preview h1,.preview h2,.preview h3 { font-family:Inter,system-ui,sans-serif; color:#183d50; line-height:1.25 }
 .preview h1 { font-size:27px; border-bottom:1px solid #dce6ec; padding-bottom:11px; margin-top:4px }
 .preview h2 { font-size:20px; margin-top:30px }
@@ -259,6 +261,9 @@ td .block-editor { margin:0 }
         <button id="editTab" data-view="edit" aria-pressed="false">Edit</button>
         <button id="previewTab" data-view="preview" aria-pressed="false">Preview</button>
         <button id="focusTab" data-view="focus" aria-pressed="false">Focus</button>
+        <span class="toolbar-label">TEXT</span>
+        <button class="button small icon" id="decreaseFontBtn" title="Decrease font size" aria-label="Decrease font size">A−</button>
+        <button class="button small icon" id="increaseFontBtn" title="Increase font size" aria-label="Increase font size">A+</button>
       </div>
     </div>
     <div class="toolbar">
@@ -2452,6 +2457,22 @@ function pruneImageCache() {
 // ---------------------------------------------------------------------------
 let paneView = 'split';
 let focusActive = false;
+let fontScale = 1;
+const MIN_FONT_SCALE = 0.75;
+const MAX_FONT_SCALE = 1.5;
+
+function setFontScale(scale) {
+  fontScale = Math.min(MAX_FONT_SCALE, Math.max(MIN_FONT_SCALE, scale));
+  const previewSize = 15 * fontScale;
+  const sourceSize = 13 * fontScale;
+  document.documentElement.style.setProperty('--preview-font-size', `${previewSize}px`);
+  document.documentElement.style.setProperty('--source-font-size', `${sourceSize}px`);
+  invalidateLineTops();
+  const decreaseBtn = $('decreaseFontBtn');
+  const increaseBtn = $('increaseFontBtn');
+  if (decreaseBtn) decreaseBtn.disabled = fontScale <= MIN_FONT_SCALE;
+  if (increaseBtn) increaseBtn.disabled = fontScale >= MAX_FONT_SCALE;
+}
 
 function setView(view) {
   finishBlockEdit(true); // an open block edit is applied before switching
@@ -2472,7 +2493,12 @@ function setView(view) {
     b.setAttribute('aria-pressed', on);
   });
 }
-document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setView(b.dataset.view));
+document.querySelectorAll('.tabs button').forEach(b => {
+  if (!b.dataset.view) return;
+  b.onclick = () => setView(b.dataset.view);
+});
+$('decreaseFontBtn').onclick = () => setFontScale(fontScale - 0.1);
+$('increaseFontBtn').onclick = () => setFontScale(fontScale + 0.1);
 
 source.addEventListener('input', () => changed());
 source.addEventListener('scroll', () => onPaneScroll(source));
@@ -2636,6 +2662,7 @@ source.value = load(STORE.draft) ?? sample;
 setBibliography(load(STORE.bib) ?? sampleBib);
 $('docName').textContent = docName;
 restoreGithub();
+setFontScale(1);
 setSyncScroll(syncScroll);
 renderFileList();
 renderRefList();

@@ -6,7 +6,7 @@ ManuMD is a local-first Markdown writing prototype for research manuscripts.
 
 ## Current prototype
 
-- Edit Markdown with a live preview (split, edit-only, preview-only or focus view) and inline image display.
+- Edit Markdown with a live preview (split, edit-only, preview-only or focus view), inline image display, and view-local text sizing with **A−** and **A+**.
 - The **Outline** in the left-hand panel lists the H1–H3 headings. Click one, or press Enter on it, to jump there: the Markdown and the preview both scroll to the heading, and the cursor moves to it.
 - Each section of the left-hand panel (Outline, Quick actions, Writing setup and Draft files, from the top) can be closed by clicking its heading, for example to give the outline the whole panel. The browser remembers which sections are closed.
 - In split view, double-click either pane to bring the other into line at the same place, or turn on **⇅ Sync scroll** to keep them scrolled together.

@@ -9,6 +9,8 @@ The **Split**, **Edit**, **Preview** and **Focus** buttons above the text choose
 - **Preview:** the formatted paper only. You can still edit it, block by block. See [Editing in the preview](#editing-in-the-preview).
 - **Focus:** the side panels are hidden, leaving the manuscript as the main view while keeping the current editor layout in the middle.
 
+Use the **A−** and **A+** buttons next to the view tabs to make the Markdown source and live preview larger or smaller together. The setting applies only to the current browser session and resets on reload.
+
 The preview updates as you type.
 
 ## Jumping to a section
