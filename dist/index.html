@@ -2466,6 +2466,7 @@ function setFontScale(scale) {
   const sourceSize = 13 * fontScale;
   document.documentElement.style.setProperty('--preview-font-size', `${previewSize}px`);
   document.documentElement.style.setProperty('--source-font-size', `${sourceSize}px`);
+  invalidateLineTops();
   const decreaseBtn = $('decreaseFontBtn');
   const increaseBtn = $('increaseFontBtn');
   if (decreaseBtn) decreaseBtn.disabled = fontScale <= MIN_FONT_SCALE;
