@@ -2449,13 +2449,23 @@ function pruneImageCache() {
 // ---------------------------------------------------------------------------
 // Views and event wiring
 // ---------------------------------------------------------------------------
+let paneView = 'split';
+let focusActive = false;
+
 function setView(view) {
   finishBlockEdit(true); // an open block edit is applied before switching
-  layout.classList.remove('view-split', 'view-edit', 'view-preview', 'view-focus');
-  layout.classList.add('view-' + view);
+  if (view === 'focus') {
+    focusActive = true;
+    layout.classList.add('view-focus');
+  } else {
+    focusActive = false;
+    paneView = view;
+    layout.classList.remove('view-focus', 'view-split', 'view-edit', 'view-preview');
+    layout.classList.add('view-' + paneView);
+  }
   invalidateLineTops();
   document.querySelectorAll('.tabs button').forEach(b => {
-    const on = b.dataset.view === view;
+    const on = focusActive ? b.dataset.view === 'focus' : b.dataset.view === paneView;
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on);
   });
