@@ -2457,6 +2457,7 @@ function setView(view) {
   if (view === 'focus') {
     focusActive = true;
     layout.classList.add('view-focus');
+    if (!layout.classList.contains('view-' + paneView)) layout.classList.add('view-' + paneView);
   } else {
     focusActive = false;
     paneView = view;
@@ -2465,7 +2466,7 @@ function setView(view) {
   }
   invalidateLineTops();
   document.querySelectorAll('.tabs button').forEach(b => {
-    const on = focusActive ? b.dataset.view === 'focus' : b.dataset.view === paneView;
+    const on = view === 'focus' ? b.dataset.view === 'focus' : b.dataset.view === paneView;
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on);
   });
