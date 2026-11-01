@@ -16,6 +16,7 @@ myst_heading_anchors = 3
 html_theme = 'furo'
 html_title = 'ManuMD'
 html_static_path = ['_static']
+html_favicon = '_static/favicon.svg'
 html_css_files = ['manumd.css']
 
 # ManuMD palette: navy #173e51, ink #172433, pale #edf2f6, cyan #03a9f4,
