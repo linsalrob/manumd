@@ -18,6 +18,17 @@ You have three ways to start:
 
 Each of these replaces the current draft. ManuMD asks first, unless the draft is empty or is still the sample.
 
+## Choose a viewing mode
+
+The view tabs above the editor let you switch between writing modes:
+
+- **Split** keeps the Markdown source and live preview side by side.
+- **Edit** hides the preview for a more focused writing view.
+- **Preview** keeps the rendered manuscript front and centre.
+- **Focus** hides the left and right side panels so the manuscript fills the page while you keep the current editor layout in the middle.
+
+Use **A−** and **A+** to make the text larger or smaller for the current browser session; the setting applies to both the Markdown source and the preview.
+
 ## Your draft is saved as you type
 
 Every change is saved in your browser straight away. The status bar at the bottom shows **● Draft saved in this browser**. If you close the tab and come back in the same browser, the draft is still there.

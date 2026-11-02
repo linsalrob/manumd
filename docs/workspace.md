@@ -28,13 +28,13 @@ The panel has four sections, from top to bottom. Click a section's heading, or {
 
 Above the text are:
 
-- **Split**, **Edit**, **Preview** and **Focus:** choose the view. See [Views](editing.md#views).
+- **Split**, **Edit**, **Preview** and **Focus:** choose the view. **Focus** hides the side panels and keeps the manuscript as the main view while retaining the current editor layout in the middle. See [Views](editing.md#views).
 - **A− / A+:** decrease or increase the font size for the current editor view. The change applies together to the Markdown source and the live preview, and resets to the default size when the browser reloads.
 - **Formatting buttons:** bold, italic, heading, quote, code and link. See [Formatting](editing.md#formatting).
 - **⇅ Sync scroll:** keeps the two panes scrolled together in Split view.
 - **＋ Citation:** opens the citation picker.
 
-The Markdown is on the left and the live preview is on the right.
+The Markdown is on the left and the live preview is on the right, unless you switch to Edit, Preview or Focus.
 
 ## Right-hand panel
 

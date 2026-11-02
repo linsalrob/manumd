@@ -37,7 +37,7 @@ Some limits:
 - **One owner per token.** A token covers repositories of one owner only: your account or a single organisation. Papers in your account and papers in a lab organisation need a token each.
 - **More reach if it leaks.** Anyone who has the token can change every repository it covers. Select only manuscript repositories, rather than **All repositories**, and give only **Contents** permission.
 
-ManuMD keeps the token until you close the tab, so you paste it once per tab and then switch between papers with [Recent manuscripts](#switch-between-manuscripts).
+ManuMD keeps the token until you close the tab, so you paste it once per tab and then switch between papers with [Recent manuscripts](#switch-between-manuscripts). The current repository, branch and file are also remembered with the draft so the dialog is pre-filled after a reload.
 
 ## Load a file
 
