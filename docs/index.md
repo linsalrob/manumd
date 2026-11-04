@@ -17,10 +17,11 @@ ManuMD is an early prototype. It edits one Markdown file at a time, and some thi
 
 ## What it does
 
-- **Edit and preview:** Markdown beside a live preview, in split, edit-only or preview-only view. In the preview you can double-click a paragraph to edit it in place.
+- **Edit and preview:** Markdown beside a live preview, in split, edit-only, preview-only or focus view. In the preview you can double-click a paragraph to edit it in place.
+- **Text sizing:** use **A−** and **A+** to enlarge or shrink the Markdown and preview together for the current browser session.
 - **Citations:** search a BibTeX library and insert Pandoc citations such as `[@Smith2024]`. The preview formats them and builds the reference list.
 - **Equations:** LaTeX math, typeset with KaTeX.
-- **GitHub:** load a Markdown file from a repository, with its figures and bibliography, and save your changes back as a commit.
+- **GitHub:** load a Markdown file from a repository, with its figures and bibliography, and save your changes back as a commit. Recent manuscript locations are remembered to make switching papers easy.
 - **Private by default:** drafts stay in your browser. A GitHub token goes only from your browser to GitHub. See [Your data and privacy](privacy.md).
 
 ```{toctree}
