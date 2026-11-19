@@ -86,6 +86,20 @@ Only the Markdown file is committed. ManuMD never commits images or the bibliogr
 **Save draft** and {kbd}`Ctrl+S` download the file to your computer. They don't save to GitHub.
 :::
 
+### Is it committed?
+
+The dot beside the file name, above the editor, shows at a glance whether your edits are on GitHub. The same dot is in the source label in the top bar, except on a phone.
+
+| Dot | Meaning |
+|---|---|
+| Filled green | The draft matches the file as you loaded or last committed it. |
+| Hollow red ring | The draft has changes that aren't committed. Click **↗ GitHub**, then **Save commit**. |
+| Grey | The draft isn't connected to GitHub. |
+
+Hover over the dot to see its meaning in words. It turns red as soon as you type, and green again after the commit, or if you undo every change. It keeps its state when you reload the page.
+
+The dot compares your draft with what *this browser* last loaded or committed. It can't tell whether a co-author has committed to the file on GitHub since. If they have, ManuMD refuses your next commit; see below.
+
 ### When someone else changed the file
 
 ManuMD commits against the version of the file you loaded. If the file has changed on GitHub since then, for example because a co-author committed, ManuMD refuses to save rather than overwrite their work:

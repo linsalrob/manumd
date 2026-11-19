@@ -6,7 +6,7 @@ ManuMD's screen has a top bar, a left-hand panel, the editor in the middle, a ri
 
 | Control | What it does |
 |---|---|
-| **Local draft** / repository name | Where the current draft came from. |
+| **Local draft** / repository name | Where the current draft came from, with the commit dot (see [Is it committed?](github.md#is-it-committed)). |
 | **↗ GitHub** | Opens the GitHub dialog, to load a file from a repository or save a commit. See [Working with GitHub](github.md). |
 | **Open .md** | Opens a Markdown file from your computer, replacing the draft. |
 | **Export PDF** | (**PDF** on a phone.) Prints the preview, without the editor around it, so you can save it as a PDF ({kbd}`Ctrl+P` or {kbd}`⌘+P`). See [Share a PDF](getting-started.md#share-a-pdf). |
@@ -28,7 +28,7 @@ The panel has four sections, from top to bottom. Click a section's heading, or {
 
 ## Editor
 
-Above the text are:
+Above the text are the file name, with a dot that shows whether the draft is committed to GitHub (green: committed; hollow red ring: changes not committed; grey: not connected to GitHub; see [Is it committed?](github.md#is-it-committed)), and:
 
 - **Split**, **Edit**, **Preview** and **Focus:** choose the view. **Focus** hides the side panels and keeps the manuscript as the main view while retaining the current editor layout in the middle. See [Views](editing.md#views).
 - **A− / A+:** decrease or increase the font size for the current editor view. The change applies together to the Markdown source and the live preview, and resets to the default size when the browser reloads.

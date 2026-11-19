@@ -19,7 +19,16 @@ a { color:#087eb5 }
 .brand small { display:block; color:#c4d5df; font-size:11px; letter-spacing:0; font-weight:500; margin-top:-2px }
 .top-actions { display:flex; align-items:center; gap:9px }
 .pill { font-size:11px; color:#d6e4ea; border:1px solid #6f8996; border-radius:20px; padding:5px 9px; display:flex; gap:6px; align-items:center }
-.dot { width:7px; height:7px; border-radius:50%; background:var(--mint) }
+/* Whether the draft matches its last GitHub commit (issue #34): a filled
+   green dot when it does, a hollow red ring once it has changed, and grey
+   for a draft not connected to GitHub. Shape as well as colour differs. */
+.commit-state { flex:none; box-sizing:border-box; width:10px; height:10px; border-radius:50%; background:#a9b8c2 }
+.commit-state.committed { background:#29866e }
+.commit-state.changed { background:transparent; border:2px solid #c4314b }
+.pill .commit-state { width:8px; height:8px }
+.pill .commit-state.local { background:#9fb3bf }
+.pill .commit-state.committed { background:var(--mint) }
+.pill .commit-state.changed { border-color:#ff8a96 }
 .button { border:1px solid var(--line); background:white; color:var(--ink); border-radius:8px; padding:8px 11px; font-weight:650; transition:.15s }
 .button:hover { border-color:#8ca4b4; background:#fbfdff }
 .button:disabled { opacity:.5; cursor:not-allowed; }
@@ -240,7 +249,7 @@ td .block-editor { margin:0 }
 <header class="topbar">
   <div class="brand"><div class="logo">M</div><div><h1>MANUMD</h1><small>Manuscript Markdown editor</small></div></div>
   <div class="top-actions">
-    <div class="pill"><span class="dot"></span><span id="sourcePill">Local draft</span></div>
+    <div class="pill"><span class="commit-state local" id="pillState" role="img" aria-label="Not connected to GitHub" title="Not connected to GitHub"></span><span id="sourcePill">Local draft</span></div>
     <button id="githubBtn" class="button dark small">↗ GitHub</button>
     <button id="openBtn" class="button small">Open .md</button>
     <button id="pdfBtn" class="button small" aria-label="Export PDF" title="Print the preview or save it as a PDF (⌘/Ctrl + P)"><span class="wide-only">Export </span>PDF</button>
@@ -281,7 +290,7 @@ td .block-editor { margin:0 }
   </aside>
   <main class="main">
     <div class="docbar">
-      <div class="doc-title"><span class="file-icon">M</span><span id="docName">manuscript.md</span><span class="save-state" id="saveState">· saved locally</span></div>
+      <div class="doc-title"><span class="commit-state local" id="commitState" role="img" aria-label="Not connected to GitHub" title="Not connected to GitHub"></span><span id="docName">manuscript.md</span><span class="save-state" id="saveState">· saved locally</span></div>
       <div class="tabs" role="group" aria-label="Editor view">
         <button class="on" id="splitTab" data-view="split" aria-pressed="true">Split</button>
         <button id="editTab" data-view="edit" aria-pressed="false">Edit</button>
@@ -431,7 +440,7 @@ const sampleImages = { 'figure-1.svg': URL.createObjectURL(new Blob([sampleSvg],
 // (or was last committed to) and changes only when a load or save succeeds.
 // It is stored with the draft so a reload keeps it. The token is held in
 // memory and in this tab's sessionStorage, never in localStorage.
-let github = null; // { repo, branch, path, sha, images }
+let github = null; // { repo, branch, path, sha, images, bib, imagesTree, committed }
 let githubToken = loadToken();
 
 let library = { entries: [], byKey: new Map(), duplicates: 0 };
@@ -1716,6 +1725,7 @@ function saveDraft(quiet = false) {
 function changed(immediate = false) {
   invalidateLineTops(); // covers typing, toolbar edits, insertions and file loads
   schedulePreview();
+  showCommitState();
   if (immediate) { saveDraft(); return; }
   $('saveState').textContent = '· saving…';
   clearTimeout(saveTimer);
@@ -2055,6 +2065,21 @@ async function loadGithubBibliography(conn, headers, markdown) {
 function setGithub(conn) {
   github = conn;
   $('sourcePill').textContent = conn ? `GitHub: ${conn.repo}` : 'Local draft';
+  showCommitState();
+}
+
+// Shows whether the draft is the text last loaded from or committed to its
+// GitHub file (issue #34). The connection keeps a fingerprint of that text,
+// so undoing every edit turns the dot green again, and the state survives a
+// reload. A connection saved before fingerprints were kept counts as changed.
+function showCommitState() {
+  const state = !github ? 'local' : github.committed === draftFingerprint(source.value, '') ? 'committed' : 'changed';
+  const label = { local: 'Not connected to GitHub', committed: `Committed: matches ${github ? github.path : ''} on GitHub`, changed: 'Changes not yet committed to GitHub' }[state];
+  for (const el of [$('commitState'), $('pillState')]) {
+    el.className = `commit-state ${state}`;
+    el.title = label;
+    el.setAttribute('aria-label', label);
+  }
 }
 
 // The draft no longer comes from a GitHub file: forget the connection and
@@ -2077,7 +2102,7 @@ function restoreGithub() {
   // connection, and this tab's next save replaces it anyway.
   if (!conn || !str(conn.repo) || !str(conn.branch) || !str(conn.path) ||
       conn.draft !== draftFingerprint(source.value, docName)) return;
-  setGithub({ repo: conn.repo, branch: conn.branch, path: conn.path, sha: str(conn.sha) ? conn.sha : null, images: str(conn.images) ? conn.images : DEFAULT_IMAGES_FOLDER, bib: str(conn.bib) ? conn.bib : DEFAULT_BIBLIOGRAPHY, imagesTree: str(conn.imagesTree) ? conn.imagesTree : null });
+  setGithub({ repo: conn.repo, branch: conn.branch, path: conn.path, sha: str(conn.sha) ? conn.sha : null, images: str(conn.images) ? conn.images : DEFAULT_IMAGES_FOLDER, bib: str(conn.bib) ? conn.bib : DEFAULT_BIBLIOGRAPHY, imagesTree: str(conn.imagesTree) ? conn.imagesTree : null, committed: str(conn.committed) ? conn.committed : null });
   restoreRepoImages(github);
 }
 
@@ -2157,7 +2182,8 @@ async function githubFile(m, save) {
       }
       const message = prompt('Commit message', `Edit ${path} with ManuMD`);
       if (message === null) return;
-      const payload = { message: message || `Edit ${path} with ManuMD`, content: encodeBase64Utf8(source.value), branch, ...(sha ? { sha } : {}) };
+      const sent = source.value; // the draft may change while the commit is in flight
+      const payload = { message: message || `Edit ${path} with ManuMD`, content: encodeBase64Utf8(sent), branch, ...(sha ? { sha } : {}) };
       const resp = await fetch(fileUrl, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await resp.json().catch(() => ({}));
       if (resp.status === 409 || (resp.status === 422 && /sha/i.test(data.message || ''))) {
@@ -2165,7 +2191,7 @@ async function githubFile(m, save) {
       }
       if (!resp.ok) throw Error(githubError(resp.status, data, { repo, branch, write: true, hasToken: true }));
       const previous = github;
-      const conn = { repo, branch, path, sha: data.content && data.content.sha, images: imagesFolder, bib: bibFile, imagesTree: null };
+      const conn = { repo, branch, path, sha: data.content && data.content.sha, images: imagesFolder, bib: bibFile, imagesTree: null, committed: draftFingerprint(sent, '') };
       if (previous && imageFolderKey(previous) === imageFolderKey(conn)) conn.imagesTree = previous.imagesTree;
       setGithub(conn);
       rememberRecent(conn);
@@ -2194,9 +2220,12 @@ async function githubFile(m, save) {
         if (!raw.ok) throw Error(await explain(raw, false));
         text = await raw.text();
       }
-      setGithub({ repo, branch, path, sha: d.sha, images: imagesFolder, bib: bibFile, imagesTree: null });
+      setGithub({ repo, branch, path, sha: d.sha, images: imagesFolder, bib: bibFile, imagesTree: null, committed: null });
       rememberRecent(github);
       source.value = text;
+      // Fingerprint the text as the editor holds it: a textarea turns CRLF
+      // line endings into LF, so the raw file would never match.
+      github.committed = draftFingerprint(source.value, '');
       setDocName(path.split('/').pop());
       setRepoImages([]);
       changed(true);
