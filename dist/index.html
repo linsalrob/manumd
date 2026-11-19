@@ -210,6 +210,24 @@ a { color:#087eb5 }
 .block-editor-bar span { flex:1 1 220px }
 li.block-editor-item { list-style:none }
 td .block-editor { margin:0 }
+/* PDF export (issue #32): printing shows only the rendered manuscript, in
+   whichever view the editor is in. The browser's print dialog saves it as a
+   PDF. The YAML front matter, shown as text in the preview, is left out. */
+@page { margin:20mm 18mm }
+@media print {
+  html, body { background:#fff; height:auto }
+  .topbar, .sidebar, .inspector, .docbar, .toolbar, .source-pane, .pane-label, .statusbar, .notice, #modalRoot, .front-matter { display:none!important }
+  .layout, .main, .editor-split { display:block!important; height:auto; min-height:0 }
+  .preview-pane { display:block!important; overflow:visible }
+  .preview { max-width:none; margin:0; padding:0; color:#000; font-size:11pt; line-height:1.5 }
+  .preview img { border:0; border-radius:0; box-shadow:none }
+  .preview h1, .preview h2, .preview h3 { break-after:avoid }
+  .preview figure, .preview img, .preview tr, .preview pre, .preview blockquote, .equation, .math.display { break-inside:avoid }
+  .preview pre { white-space:pre-wrap; overflow:visible }
+  .math.display { overflow:visible }
+  .relative-link { border-bottom:0 }
+  .preview th { print-color-adjust:exact; -webkit-print-color-adjust:exact }
+}
 </style>
 </head>
 <body>
@@ -219,6 +237,7 @@ td .block-editor { margin:0 }
     <div class="pill"><span class="dot"></span><span id="sourcePill">Local draft</span></div>
     <button id="githubBtn" class="button dark small">↗ GitHub</button>
     <button id="openBtn" class="button small">Open .md</button>
+    <button id="pdfBtn" class="button small" title="Print the preview or save it as a PDF (⌘/Ctrl + P)">Export PDF</button>
     <button id="saveBtn" class="button primary small" title="Download the Markdown file (⌘/Ctrl + S)">Save draft</button>
   </div>
 </header>
@@ -237,6 +256,7 @@ td .block-editor { margin:0 }
         <button class="button" id="bibBtn">Import .bib</button>
         <button class="button" id="imageBtn">＋ Image</button>
         <button class="button" id="downloadBtn">⇩ Download</button>
+        <button class="button" id="pdfBtn2" title="Print the preview or save it as a PDF">⎙ Export PDF</button>
       </div>
     </section>
     <div class="separator"></div>
@@ -326,6 +346,7 @@ td .block-editor { margin:0 }
         <li>⌘/Ctrl + B — bold</li>
         <li>⌘/Ctrl + I — italic</li>
         <li>⌘/Ctrl + S — download the Markdown file</li>
+        <li>⌘/Ctrl + P — export the preview as a PDF</li>
         <li>⌘/Ctrl + Shift + C — citation picker</li>
         <li>Split view: double-click source or preview — align the other pane</li>
         <li>Preview view: double-click a block, or press Enter, to edit its Markdown in place</li>
@@ -1125,8 +1146,8 @@ function loadKatex() {
 }
 
 function typesetMath() {
-  if (!preview.querySelector('.math[data-tex]')) return;
-  loadKatex().then(katex => {
+  if (!preview.querySelector('.math[data-tex]')) return Promise.resolve();
+  return loadKatex().then(katex => {
     if (mathCache.size > 500) mathCache.clear();
     for (const el of preview.querySelectorAll('.math[data-tex]')) {
       const display = el.classList.contains('display');
@@ -1825,6 +1846,23 @@ function downloadDraft() {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   notify('Markdown file downloaded');
+}
+
+// PDF export (issue #32) prints the preview; the print stylesheet hides the
+// rest of the editor, and the browser's print dialog saves it as a PDF. The
+// preview is brought up to date first, with its equations typeset, their
+// fonts and the images loaded (else they print blank), and the document title
+// becomes the PDF's suggested file name.
+async function exportPdf() {
+  finishBlockEdit(true, false);
+  if (renderQueued) updatePreview();
+  await typesetMath();
+  await Promise.all([...preview.querySelectorAll('img')].map(img => img.decode().catch(() => {})));
+  await document.fonts.ready;
+  const title = document.title;
+  document.title = docName.replace(/\.(md|markdown|txt)$/i, '') || title;
+  window.print();
+  document.title = title;
 }
 
 function addImages(files) {
@@ -2596,6 +2634,8 @@ $('mdFile').onchange = e => {
 };
 $('saveBtn').onclick = downloadDraft;
 $('downloadBtn').onclick = downloadDraft;
+$('pdfBtn').onclick = exportPdf;
+$('pdfBtn2').onclick = exportPdf;
 
 $('imageBtn').onclick = () => $('imageFiles').click();
 $('imageBtn2').onclick = () => $('imageFiles').click();
@@ -2650,6 +2690,7 @@ document.addEventListener('keydown', e => {
   const key = e.key.toLowerCase();
   const modalOpen = !!$('modalRoot').innerHTML;
   if (key === 's' && !e.shiftKey) { e.preventDefault(); downloadDraft(); }
+  else if (key === 'p' && !e.shiftKey && !modalOpen) { e.preventDefault(); exportPdf(); }
   else if (key === 'c' && e.shiftKey && !modalOpen) { e.preventDefault(); citationPicker(); }
   else if (e.target === source && !e.shiftKey && key === 'b') { e.preventDefault(); wrapSelection('**', 'bold text'); }
   else if (e.target === source && !e.shiftKey && key === 'i') { e.preventDefault(); wrapSelection('*', 'italic text'); }

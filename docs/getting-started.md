@@ -38,6 +38,12 @@ This draft lives only in this browser on this computer. Nobody else can see it, 
 - **Save draft** (or {kbd}`Ctrl+S`, {kbd}`⌘+S` on a Mac) downloads the Markdown file to your computer.
 - **Save commit**, in the GitHub dialog, saves it to a GitHub repository. See [Working with GitHub](github.md#save-a-commit).
 
+## Share a PDF
+
+Collaborators who don't use Markdown usually want a PDF. Click **Export PDF** in the top bar (or press {kbd}`Ctrl+P`, {kbd}`⌘+P` on a Mac). ManuMD opens the browser's print dialog with just the rendered manuscript: the editor, panels and toolbars are left out, whichever view you are in. Choose **Save as PDF** (in some browsers, **Microsoft Print to PDF** or the **PDF** menu) as the printer.
+
+The PDF looks like the preview: citations in the preview's author–year style, the reference list, numbered figures and tables, and typeset equations. The YAML front matter is left out. Page size and margins come from the print dialog. For a journal-formatted PDF or Word file, convert the Markdown with Pandoc.
+
 ## Add citations
 
 1. Click **Import .bib** and choose your BibTeX file, for example the one Paperpile exports.
