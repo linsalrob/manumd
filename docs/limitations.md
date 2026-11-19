@@ -25,6 +25,12 @@ ManuMD is an early prototype. These are the main things it doesn't do, or does d
 - **KaTeX, not LaTeX.** Most LaTeX math works, but not every package. Equations need an internet connection the first time.
 - **Front matter as text.** The YAML front matter is shown as text. ManuMD reads only its `bibliography:` field and a few pandoc-crossref settings, such as `figureTitle` and `figPrefix`.
 
+## PDF export
+
+- **Through the print dialog.** **Export PDF** opens the browser's print dialog. Choose to save as a PDF there; ManuMD can't download a PDF directly.
+- **The preview's style.** The PDF uses the preview's fixed author–year citation style and layout, not a journal template. There is no Word (.docx) export. Use Pandoc for both.
+- **No title block.** The YAML front matter is left out, so a title or authors given only there don't appear.
+
 ## Other
 
 - **Grammar checkers.** ManuMD has no grammar checker. A browser extension such as Grammarly may work in the Markdown text area, depending on the browser and the extension.

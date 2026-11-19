@@ -74,6 +74,7 @@ See [Markdown and equations](markdown.md) for everything the preview understands
 | {kbd}`Ctrl+B` / {kbd}`⌘+B` | Bold |
 | {kbd}`Ctrl+I` / {kbd}`⌘+I` | Italic |
 | {kbd}`Ctrl+S` / {kbd}`⌘+S` | Download the Markdown file |
+| {kbd}`Ctrl+P` / {kbd}`⌘+P` | Export the preview as a PDF |
 | {kbd}`Ctrl+Shift+C` / {kbd}`⌘+Shift+C` | Open the citation picker |
 | Click or {kbd}`Enter` on an outline heading | Jump to that section |
 | Double-click, Split view | Align the other pane |
