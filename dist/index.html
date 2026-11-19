@@ -2220,9 +2220,12 @@ async function githubFile(m, save) {
         if (!raw.ok) throw Error(await explain(raw, false));
         text = await raw.text();
       }
-      setGithub({ repo, branch, path, sha: d.sha, images: imagesFolder, bib: bibFile, imagesTree: null, committed: draftFingerprint(text, '') });
+      setGithub({ repo, branch, path, sha: d.sha, images: imagesFolder, bib: bibFile, imagesTree: null, committed: null });
       rememberRecent(github);
       source.value = text;
+      // Fingerprint the text as the editor holds it: a textarea turns CRLF
+      // line endings into LF, so the raw file would never match.
+      github.committed = draftFingerprint(source.value, '');
       setDocName(path.split('/').pop());
       setRepoImages([]);
       changed(true);
