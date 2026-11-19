@@ -9,7 +9,7 @@ ManuMD's screen has a top bar, a left-hand panel, the editor in the middle, a ri
 | **Local draft** / repository name | Where the current draft came from. |
 | **↗ GitHub** | Opens the GitHub dialog, to load a file from a repository or save a commit. See [Working with GitHub](github.md). |
 | **Open .md** | Opens a Markdown file from your computer, replacing the draft. |
-| **Export PDF** | Prints the preview, without the editor around it, so you can save it as a PDF ({kbd}`Ctrl+P` or {kbd}`⌘+P`). See [Share a PDF](getting-started.md#share-a-pdf). |
+| **Export PDF** | (**PDF** on a phone.) Prints the preview, without the editor around it, so you can save it as a PDF ({kbd}`Ctrl+P` or {kbd}`⌘+P`). See [Share a PDF](getting-started.md#share-a-pdf). |
 | **Save draft** | Downloads the Markdown file to your computer ({kbd}`Ctrl+S` or {kbd}`⌘+S`). It does not save to GitHub. |
 
 ## Left-hand panel

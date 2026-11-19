@@ -185,6 +185,9 @@ a { color:#087eb5 }
   .topbar { padding:0 12px }
   .brand small { display:none }
   .top-actions .pill { display:none }
+  /* Keep every top-bar action on screen at phone widths, down to 320px. */
+  .top-actions { gap:6px }
+  .top-actions .wide-only { display:none }
   .layout { height:calc(100vh - 58px); grid-template-columns:1fr; min-height:0 }
   .sidebar { display:none }
   .editor-split { grid-template-columns:1fr }
@@ -197,6 +200,9 @@ a { color:#087eb5 }
   .toolbar-label { display:none }
   .sync-toggle { display:none }
   .status-left span:nth-child(n+2) { display:none }
+}
+@media(max-width:360px) {
+  .brand h1 { display:none } /* the M logo stays, so the actions fit */
 }
 .dialog-error { margin:4px 0 12px; padding:10px 12px; border:1px solid #ffbf47; border-left-width:4px; border-radius:8px; background:#fff8e8; color:#172433; font-size:13px; line-height:1.5 }
 .edit-hint { display:none; margin-left:6px; color:#03a9f4; letter-spacing:0; font-weight:600; text-transform:none }
@@ -237,7 +243,7 @@ td .block-editor { margin:0 }
     <div class="pill"><span class="dot"></span><span id="sourcePill">Local draft</span></div>
     <button id="githubBtn" class="button dark small">↗ GitHub</button>
     <button id="openBtn" class="button small">Open .md</button>
-    <button id="pdfBtn" class="button small" title="Print the preview or save it as a PDF (⌘/Ctrl + P)">Export PDF</button>
+    <button id="pdfBtn" class="button small" aria-label="Export PDF" title="Print the preview or save it as a PDF (⌘/Ctrl + P)"><span class="wide-only">Export </span>PDF</button>
     <button id="saveBtn" class="button primary small" title="Download the Markdown file (⌘/Ctrl + S)">Save draft</button>
   </div>
 </header>
